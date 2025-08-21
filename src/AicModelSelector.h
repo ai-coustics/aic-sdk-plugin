@@ -33,7 +33,7 @@ class ModelSelectorLnF : public juce::LookAndFeel_V4
 
     juce::Font getComboBoxFont(juce::ComboBox&) override
     {
-        return withDefaultMetrics(juce::FontOptions{14.f});
+        return withDefaultMetrics(juce::FontOptions{16.f});
     }
 
     void positionComboBoxText(juce::ComboBox& box, juce::Label& label) override
@@ -46,8 +46,6 @@ class ModelSelectorLnF : public juce::LookAndFeel_V4
     void drawPopupMenuBackground(Graphics& g, int, int) override
     {
         g.fillAll(aic::ui::BLACK_0);
-        // g.setColour(aic::ui::BLACK_20);
-        // g.drawRoundedRectangle(0, 0, (float) width, (float) height, 8.f, 1.f);
     }
 
     void drawPopupMenuItem(Graphics& g, const Rectangle<int>& area, const bool, const bool isActive,
@@ -73,11 +71,7 @@ class ModelSelectorLnF : public juce::LookAndFeel_V4
 
         r.reduce(jmin(5, area.getWidth() / 20), 0);
 
-        auto font = getPopupMenuFont();
-
-        font.setHeight(14.f);
-
-        g.setFont(font);
+        g.setFont(16.f);
 
         auto iconArea = r.removeFromLeft(14).toFloat();
 

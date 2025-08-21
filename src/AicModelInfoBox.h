@@ -34,10 +34,7 @@ class AicModelInfoBox : public juce::Component
 
 {
   public:
-    AicModelInfoBox()
-    {
-        setSize(385, 168);
-    }
+    AicModelInfoBox() {}
 
     // Method to update model information
     void setModelInfo(const ModelInfo& info)
@@ -58,10 +55,7 @@ class AicModelInfoBox : public juce::Component
         g.setColour(aic::ui::ROSA_TINT);
         g.fillRoundedRectangle(bounds.toFloat(), 8.f);
 
-        bounds.removeFromLeft(16);
-        bounds.removeFromRight(16);
-        bounds.removeFromTop(12);
-        bounds.removeFromBottom(12);
+        bounds.reduce(16, 12);
 
         g.setColour(aic::ui::BLACK_100);
 
@@ -79,7 +73,9 @@ class AicModelInfoBox : public juce::Component
             for (size_t i = 0; i < infoLines.size(); ++i)
             {
                 auto line = bounds.removeFromTop(24);
+                g.setFont(14.f);
                 g.drawText(infoLines[i].first, line, juce::Justification::centredLeft);
+                g.setFont(16.f);
                 g.drawText(infoLines[i].second, line, juce::Justification::centredRight);
 
                 // Add spacing between lines (except after the last line)
@@ -89,8 +85,8 @@ class AicModelInfoBox : public juce::Component
         }
         else
         {
-            g.setFont(30.f);
-            g.drawText("Model Error!", bounds, juce::Justification::centred);
+            g.setFont(24.f);
+            g.drawText("Unsupported Audio Settings!", bounds, juce::Justification::centred);
         }
     }
 

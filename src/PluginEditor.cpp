@@ -1,6 +1,7 @@
 #include "PluginEditor.h"
 
 #include "AicColours.h"
+#include "AicModelInfoBox.h"
 #include "BinaryData.h"
 #include "PluginProcessor.h"
 
@@ -31,7 +32,7 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize(454, 588);
+    setSize(454, 490);
 }
 
 AicDemoAudioProcessorEditor::~AicDemoAudioProcessorEditor()
@@ -45,15 +46,31 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
     g.fillAll(aic::ui::BLACK_0);
 
     g.setColour(aic::ui::BLACK_70);
-    g.drawText("Model", 35, 160, 385, 24, juce::Justification::centredLeft);
-    modelSelector.setBounds(35, 192, 385, 40);
 
-    modelInfoBox.setTopLeftPosition(35, 240);
+    auto bounds = getLocalBounds();
+    bounds.reduce(35.f, 36.f);
 
-    auto sliderOverlap = 17;
-    enhancementSlider.setTopLeftPosition(35 - sliderOverlap, 432);
+    g.setFont(14.f);
+    g.drawText("License Active", bounds.removeFromTop(16), juce::Justification::centredRight);
 
-    m_logo->setTransformToFit(juce::Rectangle<float>{35.f, 536.f, 100.f, 16.f},
+    g.setFont(16.f);
+    g.drawText("Model", bounds.removeFromTop(24), juce::Justification::centredLeft);
+
+    bounds.removeFromTop(8.f);
+
+    modelSelector.setBounds(bounds.removeFromTop(40));
+
+    bounds.removeFromTop(8.f);
+
+    modelInfoBox.setBounds(bounds.removeFromTop(160));
+
+    bounds.removeFromTop(24.f);
+
+    enhancementSlider.setBounds(bounds.removeFromTop(80));
+
+    bounds.removeFromTop(24.f);
+
+    m_logo->setTransformToFit(bounds.removeFromTop(20).removeFromLeft(100).toFloat(),
                               juce::RectanglePlacement::centred);
 }
 

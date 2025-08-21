@@ -52,6 +52,7 @@ struct SliderLnF : juce::LookAndFeel_V4
 
         // Slider Label
         g.setColour(aic::ui::BLACK_60);
+        g.setFont(16.f);
         g.drawText("Enhancement Level", juce::roundToInt(labelX), juce::roundToInt(labelY),
                    juce::roundToInt(labelWidth), juce::roundToInt(labelHeight),
                    juce::Justification::centredLeft);
@@ -64,6 +65,7 @@ struct SliderLnF : juce::LookAndFeel_V4
 
             g.setColour(aic::ui::BLACK_70); // Black_70
 
+            g.setFont(11.f);
             g.drawText(juce::String(juce::roundToInt(slider.getValue() * 100.0) / 100.0),
                        juce::roundToInt(tooltipX), juce::roundToInt(tooltipY),
                        juce::roundToInt(tooltipWidth), juce::roundToInt(tooltipHeight),
@@ -90,6 +92,7 @@ struct SliderLnF : juce::LookAndFeel_V4
 
         // Labels
         g.setColour(aic::ui::BLACK_60);
+        g.setFont(14.f);
         g.drawText("0", juce::roundToInt(valueLabelX), juce::roundToInt(valueLabelY),
                    juce::roundToInt(valueLabelWidth), juce::roundToInt(valueLabelHeight),
                    juce::Justification::centredLeft);
@@ -116,7 +119,6 @@ class AicSlider : public juce::Slider
         setSliderStyle(LinearHorizontal);
 
         setLookAndFeel(&m_lnf);
-        setSize(419, 80);
     }
 
     ~AicSlider() override
