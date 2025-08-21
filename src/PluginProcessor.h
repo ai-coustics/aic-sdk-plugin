@@ -1,10 +1,12 @@
 #pragma once
 
 #include "AicModelInfoBox.h"
+#include "juce_core/juce_core.h"
 
 #include <aic.h>
 #include <aic.hpp>
 #include <array>
+#include <cassert>
 #include <juce_audio_processors/juce_audio_processors.h>
 
 // Struct to hold model information
@@ -55,7 +57,15 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 
-    const juce::StringArray getModelChoices() const;
+    const juce::StringArray getModelChoices() const
+    {
+        juce::StringArray choices;
+        for (const auto& modelInfo : modelInfos)
+        {
+            choices.add(modelInfo.name);
+        }
+        return choices;
+    }
 
     juce::AudioProcessorValueTreeState state;
 
@@ -84,62 +94,80 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
         return licenseFile;
     }
 
-    void initializeModels();
-
-    /**
-     * @brief Validates and saves a new license key.
-     *
-     * This method attempts to validate the provided license key by creating
-     * a test model instance. If validation succeeds, the license key is saved
-     * to the license file and all models are reinitialized.
-     *
-     * @param licenseKey The license key string to validate
-     * @return true if the license key is valid and was saved successfully, false otherwise
-     */
-    bool validateAndSaveLicenseKey(const juce::String& licenseKey);
-
     aic::ui::ModelUiInfo getModelInfo(int modelIndex) const
     {
-        auto& selectedModel = m_models[static_cast<size_t>(modelIndex)];
-
-        auto sample_rate  = static_cast<int>(selectedModel->get_optimal_sample_rate());
-        auto num_frames   = static_cast<int>(selectedModel->get_optimal_num_frames());
-        auto output_delay = static_cast<int>(((double) selectedModel->get_output_delay() * 1000.0) /
-                                             current_sample_rate); // ms
-
-        switch (modelInfos[static_cast<size_t>(modelIndex)].modelType)
+        if (m_model && m_modelRunning)
         {
-        case aic::ModelType::Quail_L48:
-            return aic::ui::ModelUiInfo(sample_rate, 10, 30, num_frames, output_delay);
-        case aic::ModelType::Quail_L16:
-            return aic::ui::ModelUiInfo(sample_rate, 10, 30, num_frames, output_delay);
-        case aic::ModelType::Quail_L8:
-            return aic::ui::ModelUiInfo(sample_rate, 10, 30, num_frames, output_delay);
-        case aic::ModelType::Quail_S48:
-            return aic::ui::ModelUiInfo(sample_rate, 10, 30, num_frames, output_delay);
-        case aic::ModelType::Quail_S16:
-            return aic::ui::ModelUiInfo(sample_rate, 10, 30, num_frames, output_delay);
-        case aic::ModelType::Quail_S8:
-            return aic::ui::ModelUiInfo(sample_rate, 10, 30, num_frames, output_delay);
-        case aic::ModelType::Quail_XS:
-            return aic::ui::ModelUiInfo(sample_rate, 10, 10, num_frames, output_delay);
-        case aic::ModelType::Quail_XXS:
-            return aic::ui::ModelUiInfo(sample_rate, 10, 10, num_frames, output_delay);
+            auto model_sample_rate = static_cast<int>(m_model->get_optimal_sample_rate());
+            auto num_frames        = static_cast<int>(m_model->get_optimal_num_frames());
+            auto output_delay      = static_cast<int>(
+                juce::roundToInt((static_cast<double>(m_model->get_output_delay()) * 1000.0) /
+                                      static_cast<double>(m_currentSampleRate))); // ms
+            switch (modelInfos[static_cast<size_t>(modelIndex)].modelType)
+            {
+            case aic::ModelType::Quail_L48:
+                return aic::ui::ModelUiInfo(model_sample_rate, 10, 30, num_frames, output_delay);
+            case aic::ModelType::Quail_L16:
+                return aic::ui::ModelUiInfo(model_sample_rate, 10, 30, num_frames, output_delay);
+            case aic::ModelType::Quail_L8:
+                return aic::ui::ModelUiInfo(model_sample_rate, 10, 30, num_frames, output_delay);
+            case aic::ModelType::Quail_S48:
+                return aic::ui::ModelUiInfo(model_sample_rate, 10, 30, num_frames, output_delay);
+            case aic::ModelType::Quail_S16:
+                return aic::ui::ModelUiInfo(model_sample_rate, 10, 30, num_frames, output_delay);
+            case aic::ModelType::Quail_S8:
+                return aic::ui::ModelUiInfo(model_sample_rate, 10, 30, num_frames, output_delay);
+            case aic::ModelType::Quail_XS:
+                return aic::ui::ModelUiInfo(model_sample_rate, 10, 10, num_frames, output_delay);
+            case aic::ModelType::Quail_XXS:
+                return aic::ui::ModelUiInfo(model_sample_rate, 10, 10, num_frames, output_delay);
+            }
+        }
+        else
+        {
+            return aic::ui::ModelUiInfo(false);
         }
     }
 
     bool wasPrepareCalled() const
     {
-        return m_prepareWasCalled.load();
+        return m_modelChanged.load();
     }
 
     void acknowledgePrepareCall()
     {
-        m_prepareWasCalled.store(false);
+        m_modelChanged.store(false);
     }
 
   private:
-    std::atomic<bool> m_licenseValid = {false};
+    void createModel(int index)
+    {
+        index = juce::jlimit(0, static_cast<int>(numModels - 1), index);
+        auto [model, errorCode] =
+            aic::AicModel::create(modelInfos[static_cast<size_t>(index)].modelType, m_licenseKey);
+        if (errorCode == aic::ErrorCode::Success)
+        {
+            assert(model);
+            m_licenseValid.store(true);
+            m_model = std::move(model);
+        }
+        else
+        {
+            m_licenseValid.store(false);
+            m_model = nullptr;
+        }
+    }
+
+    void prepareModel()
+    {
+        if (m_model)
+        {
+            auto errorCode =
+                m_model->initialize(m_currentSampleRate, m_currentNumChannels, m_currentNumFrames);
+            m_modelRunning = errorCode == aic::ErrorCode::Success;
+            m_modelChanged.store(true);
+        }
+    }
 
     // Define all models here
     inline static const std::array<ModelInfo, 8> modelInfos = {
@@ -151,17 +179,20 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
          {"Quail S8", aic::ModelType::Quail_S8},
          {"Quail XS", aic::ModelType::Quail_XS},
          {"Quail XXS", aic::ModelType::Quail_XXS}}};
-
     static constexpr size_t numModels = modelInfos.size();
 
-    // Array of unique_ptrs to aic::Model
-    std::array<std::unique_ptr<aic::AicModel>, numModels> m_models;
+    std::unique_ptr<aic::AicModel> m_model;
 
-    // Store license key as string
-    std::string m_licenseKey;
+    std::string       m_licenseKey;
+    std::atomic<bool> m_licenseValid = {false};
 
-    double            current_sample_rate;
-    std::atomic<bool> m_prepareWasCalled{false};
+    int               m_activeModelIndex{0};
+    uint32_t          m_currentSampleRate{0};
+    uint16_t          m_currentNumChannels{0};
+    size_t            m_currentNumFrames{0};
+    std::atomic<bool> m_modelChanged{false};
+
+    bool m_modelRunning{false};
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AicDemoAudioProcessor)

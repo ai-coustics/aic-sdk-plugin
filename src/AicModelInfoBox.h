@@ -14,15 +14,19 @@ struct ModelUiInfo
     std::string modelDelay;
     std::string optimalNumFrames;
     std::string currentOutputDelay;
+    bool        isModelRunning;
 
     // Constructor for easy initialization
     ModelUiInfo() = default;
+
+    ModelUiInfo(const bool modelRunning) : isModelRunning(modelRunning) {}
 
     ModelUiInfo(const int sr, const int w, const int md, const int nf, const int od)
         : modelSampleRate(std::to_string(sr) + " Hz"), modelWindowLength(std::to_string(w) + " ms"),
           modelDelay(std::to_string(md) + " ms"), optimalNumFrames(std::to_string(nf)),
           currentOutputDelay(std::to_string(od) + " ms")
     {
+        isModelRunning = true;
     }
 };
 
@@ -61,24 +65,32 @@ class AicModelInfoBox : public juce::Component
 
         g.setColour(aic::ui::BLACK_100);
 
-        // Create a vector of label-value pairs for easy iteration
-        std::vector<std::pair<std::string, std::string>> infoLines = {
-            {"Model Sample Rate", modelInfo.modelSampleRate},
-            {"Model Window Length", modelInfo.modelWindowLength},
-            {"Model Delay", modelInfo.modelDelay},
-            {"Optimal Num Frames", modelInfo.optimalNumFrames},
-            {"Current Output Delay", modelInfo.currentOutputDelay}};
-
-        // Draw each line
-        for (size_t i = 0; i < infoLines.size(); ++i)
+        if (modelInfo.isModelRunning)
         {
-            auto line = bounds.removeFromTop(24);
-            g.drawText(infoLines[i].first, line, juce::Justification::centredLeft);
-            g.drawText(infoLines[i].second, line, juce::Justification::centredRight);
+            // Create a vector of label-value pairs for easy iteration
+            std::vector<std::pair<std::string, std::string>> infoLines = {
+                {"Model Sample Rate", modelInfo.modelSampleRate},
+                {"Model Window Length", modelInfo.modelWindowLength},
+                {"Model Delay", modelInfo.modelDelay},
+                {"Optimal Num Frames", modelInfo.optimalNumFrames},
+                {"Current Output Delay", modelInfo.currentOutputDelay}};
 
-            // Add spacing between lines (except after the last line)
-            if (i < infoLines.size() - 1)
-                bounds.removeFromTop(6);
+            // Draw each line
+            for (size_t i = 0; i < infoLines.size(); ++i)
+            {
+                auto line = bounds.removeFromTop(24);
+                g.drawText(infoLines[i].first, line, juce::Justification::centredLeft);
+                g.drawText(infoLines[i].second, line, juce::Justification::centredRight);
+
+                // Add spacing between lines (except after the last line)
+                if (i < infoLines.size() - 1)
+                    bounds.removeFromTop(6);
+            }
+        }
+        else
+        {
+            g.setFont(30.f);
+            g.drawText("Model Error!", bounds, juce::Justification::centred);
         }
     }
 

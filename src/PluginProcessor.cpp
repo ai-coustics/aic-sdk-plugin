@@ -3,6 +3,7 @@
 #include "PluginEditor.h"
 
 #include <aic.hpp>
+#include <cstdint>
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_audio_processors/juce_audio_processors.h>
 
@@ -19,8 +20,8 @@ AicDemoAudioProcessor::AicDemoAudioProcessor()
                  juce::NormalisableRange<float>(0.0f, 1.0f), 1.0f),
              std::make_unique<juce::AudioParameterFloat>(
                  juce::ParameterID{"voicegain", 1}, "Voice Gain",
-                 juce::NormalisableRange<float>(-12.0f, 12.0f), 0.0f),
-             std::make_unique<juce::AudioParameterBool>(juce::ParameterID{"noisegateenable", 1},
+                 juce::NormalisableRange<float>(-12.0f, 12.0f), 1.0f),
+             std::make_unique<juce::AudioParameterBool>(juce::ParameterID{"noisegateenable", 0},
                                                         "Noise Gate Enable", true)})
 {
     // Load license key
@@ -43,80 +44,7 @@ AicDemoAudioProcessor::AicDemoAudioProcessor()
         DBG("License file not found!");
     }
 
-    // Create models using the new API
-    for (size_t i = 0; i < numModels; ++i)
-    {
-        auto [model, erroCode] = aic::AicModel::create(modelInfos[i].modelType, m_licenseKey);
-        if (erroCode == aic::ErrorCode::Success)
-        {
-            m_licenseValid.store(true);
-            m_models[i] = std::move(model);
-        }
-        else
-        {
-            m_licenseValid.store(false);
-            m_models[i] = nullptr;
-        }
-    }
-}
-
-const juce::StringArray AicDemoAudioProcessor::getModelChoices() const
-{
-    juce::StringArray choices;
-    for (const auto& modelInfo : modelInfos)
-    {
-        choices.add(modelInfo.name);
-    }
-    return choices;
-}
-
-bool AicDemoAudioProcessor::validateAndSaveLicenseKey(const juce::String& licenseKey)
-{
-    std::string licenseKeyStr = licenseKey.toStdString();
-
-    // Test license validity by trying to create a model
-    auto [testModel, errorCode] = aic::AicModel::create(modelInfos[0].modelType, licenseKeyStr);
-
-    if (errorCode != aic::ErrorCode::Success)
-    {
-        return false;
-    }
-
-    // License is valid, save it to file
-    juce::File licenseFile = getLicenseFile();
-
-    // Create the directory if it doesn't exist
-    licenseFile.getParentDirectory().createDirectory();
-
-    // Write the license key to file
-    if (!licenseFile.replaceWithText(licenseKey))
-    {
-        DBG("Failed to save license file!");
-        return false;
-    }
-
-    // Update internal license key
-    m_licenseKey = licenseKeyStr;
-
-    // Reinitialize all models with the new license
-    for (size_t i = 0; i < numModels; ++i)
-    {
-        auto [model, erroCode] = aic::AicModel::create(modelInfos[i].modelType, m_licenseKey);
-        if (erroCode == aic::ErrorCode::Success)
-        {
-            m_models[i] = std::move(model);
-        }
-        else
-        {
-            m_models[i] = nullptr;
-        }
-    }
-
-    // Update license validity flag
-    m_licenseValid.store(true);
-
-    DBG("License key validated and saved successfully!");
-    return true;
+    createModel(m_activeModelIndex);
 }
 
 //==============================================================================
@@ -186,19 +114,11 @@ void AicDemoAudioProcessor::changeProgramName(int index, const juce::String& new
 //==============================================================================
 void AicDemoAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    // Initialize all valid models
-    for (auto& model : m_models)
-    {
-        if (model)
-        {
-            model->initialize(static_cast<uint32_t>(sampleRate),
-                              static_cast<uint16_t>(getTotalNumInputChannels()),
-                              static_cast<size_t>(samplesPerBlock));
-        }
-    }
+    m_currentSampleRate  = static_cast<uint32_t>(sampleRate);
+    m_currentNumChannels = static_cast<uint16_t>(getTotalNumInputChannels());
+    m_currentNumFrames   = static_cast<size_t>(samplesPerBlock);
 
-    current_sample_rate = sampleRate;
-    m_prepareWasCalled.store(true);
+    prepareModel();
 }
 
 void AicDemoAudioProcessor::releaseResources()
@@ -208,13 +128,9 @@ void AicDemoAudioProcessor::releaseResources()
 
 void AicDemoAudioProcessor::reset()
 {
-    // Reset all valid models
-    for (auto& model : m_models)
+    if (m_model)
     {
-        if (model)
-        {
-            model->reset();
-        }
+        m_model->reset();
     }
 }
 
@@ -257,29 +173,34 @@ void AicDemoAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     int modelIndex = static_cast<int>(modelParameterValue->load());
     modelIndex     = juce::jlimit(0, static_cast<int>(numModels - 1), modelIndex);
 
-    // Get the selected model
-    auto& selectedModel = m_models[static_cast<size_t>(modelIndex)];
-
-    if (!selectedModel)
+    // update model if model changed
+    if (m_activeModelIndex != modelIndex)
     {
-        // Model not available, just return (audio passes through unchanged)
+        m_activeModelIndex = modelIndex;
+        createModel(m_activeModelIndex);
+        prepareModel();
+    }
+
+    if (!m_model)
+    {
+        // Model is nullptr, just return (audio passes through unchanged)
         return;
     }
 
     // Set parameters for selected model
-    selectedModel->set_parameter(aic::Parameter::EnhancementLevel,
-                                 state.getRawParameterValue("enhancement")->load());
+    m_model->set_parameter(aic::Parameter::EnhancementLevel,
+                           state.getRawParameterValue("enhancement")->load());
 
-    selectedModel->set_parameter(
+    m_model->set_parameter(
         aic::Parameter::VoiceGain,
         juce::Decibels::decibelsToGain(state.getRawParameterValue("voicegain")->load()));
 
-    selectedModel->set_parameter(aic::Parameter::NoiseGateEnable,
-                                 state.getRawParameterValue("noisegateenable")->load());
+    m_model->set_parameter(aic::Parameter::NoiseGateEnable,
+                           state.getRawParameterValue("noisegateenable")->load());
 
-    selectedModel->process_planar(buffer.getArrayOfWritePointers(),
-                                  static_cast<uint16_t>(totalNumInputChannels),
-                                  static_cast<size_t>(buffer.getNumSamples()));
+    m_model->process_planar(buffer.getArrayOfWritePointers(),
+                            static_cast<uint16_t>(totalNumInputChannels),
+                            static_cast<size_t>(buffer.getNumSamples()));
 }
 
 //==============================================================================

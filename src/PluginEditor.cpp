@@ -17,7 +17,6 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
     addAndMakeVisible(enhancementSlider);
 
     addAndMakeVisible(modelSelector);
-    modelSelector.addListener(this);
     modelSelector.addItemList(processorRef.getModelChoices(), 1);
     modelSelector.setSelectedItemIndex(
         static_cast<int>(processorRef.state.getRawParameterValue("model")->load()));
@@ -28,24 +27,16 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
 
     startTimer(100);
 
-    // Initialize license dialog
-    m_licenseDialog = std::make_unique<aic::ui::LicenseDialog>(
-        [this](const juce::String& licenseKey) { return onLicenseKeySubmitted(licenseKey); });
-
     setResizable(false, false);
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     setSize(454, 588);
-
-    // Check license validity and show dialog if needed
-    checkLicenseAndShowDialog();
 }
 
 AicDemoAudioProcessorEditor::~AicDemoAudioProcessorEditor()
 {
     stopTimer();
-    modelSelector.removeListener(this);
 }
 
 //==============================================================================
@@ -72,10 +63,11 @@ void AicDemoAudioProcessorEditor::resized()
     // subcomponents in your editor..
 }
 
-void AicDemoAudioProcessorEditor::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
+void AicDemoAudioProcessorEditor::timerCallback()
 {
-    if (comboBoxThatHasChanged == &modelSelector)
+    if (processorRef.wasPrepareCalled())
     {
+        processorRef.acknowledgePrepareCall();
         updateModelInfo();
     }
 }
@@ -86,35 +78,4 @@ void AicDemoAudioProcessorEditor::updateModelInfo()
 
     auto modelInfo = processorRef.getModelInfo(selectedIndex);
     modelInfoBox.setModelInfo(modelInfo);
-}
-
-void AicDemoAudioProcessorEditor::timerCallback()
-{
-    if (processorRef.wasPrepareCalled())
-    {
-        processorRef.acknowledgePrepareCall();
-        updateModelInfo();
-    }
-}
-
-void AicDemoAudioProcessorEditor::checkLicenseAndShowDialog()
-{
-    DBG("Checking license validity: " << (processorRef.isLicenseValid() ? "valid" : "invalid"));
-    if (!processorRef.isLicenseValid())
-    {
-        DBG("License is invalid, showing license dialog");
-        m_licenseDialog->showDialog(this);
-    }
-    else
-    {
-        DBG("License is valid, no dialog needed");
-    }
-}
-
-bool AicDemoAudioProcessorEditor::onLicenseKeySubmitted(const juce::String& licenseKey)
-{
-    DBG("License key submitted: " << licenseKey.substring(0, 10) << "...");
-    bool isValid = processorRef.validateAndSaveLicenseKey(licenseKey);
-    DBG("License validation result: " << (isValid ? "success" : "failed"));
-    return isValid;
 }
