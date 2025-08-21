@@ -14,6 +14,8 @@ struct ModelInfo
 {
     const char*    name;
     aic::ModelType modelType;
+    int            windowLengthMs;
+    int            modelDelayMs;
 };
 
 //==============================================================================
@@ -94,60 +96,45 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
         return licenseFile;
     }
 
-    aic::ui::ModelUiInfo getModelInfo(int modelIndex) const
+    aic::ui::ModelInfo getModelInfo() const
     {
         if (m_model && m_modelRunning)
         {
-            auto model_sample_rate = static_cast<int>(m_model->get_optimal_sample_rate());
-            auto num_frames        = static_cast<int>(m_model->get_optimal_num_frames());
-            auto output_delay      = static_cast<int>(
+            // calculate outputDelay in ms
+            auto outputDelayMs = static_cast<int>(
                 juce::roundToInt((static_cast<double>(m_model->get_output_delay()) * 1000.0) /
-                                      static_cast<double>(m_currentSampleRate))); // ms
-            switch (modelInfos[static_cast<size_t>(modelIndex)].modelType)
-            {
-            case aic::ModelType::Quail_L48:
-                return aic::ui::ModelUiInfo(model_sample_rate, 10, 30, num_frames, output_delay);
-            case aic::ModelType::Quail_L16:
-                return aic::ui::ModelUiInfo(model_sample_rate, 10, 30, num_frames, output_delay);
-            case aic::ModelType::Quail_L8:
-                return aic::ui::ModelUiInfo(model_sample_rate, 10, 30, num_frames, output_delay);
-            case aic::ModelType::Quail_S48:
-                return aic::ui::ModelUiInfo(model_sample_rate, 10, 30, num_frames, output_delay);
-            case aic::ModelType::Quail_S16:
-                return aic::ui::ModelUiInfo(model_sample_rate, 10, 30, num_frames, output_delay);
-            case aic::ModelType::Quail_S8:
-                return aic::ui::ModelUiInfo(model_sample_rate, 10, 30, num_frames, output_delay);
-            case aic::ModelType::Quail_XS:
-                return aic::ui::ModelUiInfo(model_sample_rate, 10, 10, num_frames, output_delay);
-            case aic::ModelType::Quail_XXS:
-                return aic::ui::ModelUiInfo(model_sample_rate, 10, 10, num_frames, output_delay);
-            }
+                                 static_cast<double>(m_currentSampleRate))); // ms
+
+            return aic::ui::ModelInfo(static_cast<int>(m_model->get_optimal_sample_rate()),
+                                      modelInfos[m_activeModelIndex].windowLengthMs,
+                                      modelInfos[m_activeModelIndex].modelDelayMs,
+                                      static_cast<int>(m_model->get_optimal_num_frames()),
+                                      outputDelayMs);
         }
         else
         {
-            return aic::ui::ModelUiInfo(false);
+            return aic::ui::ModelInfo(false);
         }
     }
 
-    bool wasPrepareCalled() const
+    bool modelChanged() const
     {
         return m_modelChanged.load();
     }
 
-    void acknowledgePrepareCall()
+    void acknowledgeModelChanged()
     {
         m_modelChanged.store(false);
     }
 
   private:
-    void createModel(int index)
+    void createModel(size_t index)
     {
-        index = juce::jlimit(0, static_cast<int>(numModels - 1), index);
-        auto [model, errorCode] =
-            aic::AicModel::create(modelInfos[static_cast<size_t>(index)].modelType, m_licenseKey);
-        if (errorCode == aic::ErrorCode::Success)
+        index = static_cast<size_t>(
+            juce::jlimit(0, static_cast<int>(m_numModels - 1), static_cast<int>(index)));
+        auto [model, errorCode] = aic::AicModel::create(modelInfos[index].modelType, m_licenseKey);
+        if (model)
         {
-            assert(model);
             m_licenseValid.store(true);
             m_model = std::move(model);
         }
@@ -158,7 +145,7 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
         }
     }
 
-    void prepareModel()
+    void initializeModel()
     {
         if (m_model)
         {
@@ -171,22 +158,22 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
 
     // Define all models here
     inline static const std::array<ModelInfo, 8> modelInfos = {
-        {{"Quail L48", aic::ModelType::Quail_L48},
-         {"Quail L16", aic::ModelType::Quail_L16},
-         {"Quail L8", aic::ModelType::Quail_L8},
-         {"Quail S48", aic::ModelType::Quail_S48},
-         {"Quail S16", aic::ModelType::Quail_S16},
-         {"Quail S8", aic::ModelType::Quail_S8},
-         {"Quail XS", aic::ModelType::Quail_XS},
-         {"Quail XXS", aic::ModelType::Quail_XXS}}};
-    static constexpr size_t numModels = modelInfos.size();
+        {{"Quail L48", aic::ModelType::Quail_L48, 10, 30},
+         {"Quail L16", aic::ModelType::Quail_L16, 10, 30},
+         {"Quail L8", aic::ModelType::Quail_L8, 10, 30},
+         {"Quail S48", aic::ModelType::Quail_S48, 10, 30},
+         {"Quail S16", aic::ModelType::Quail_S16, 10, 30},
+         {"Quail S8", aic::ModelType::Quail_S8, 10, 30},
+         {"Quail XS", aic::ModelType::Quail_XS, 10, 10},
+         {"Quail XXS", aic::ModelType::Quail_XXS, 10, 10}}};
+    static constexpr size_t m_numModels = modelInfos.size();
 
     std::unique_ptr<aic::AicModel> m_model;
 
     std::string       m_licenseKey;
     std::atomic<bool> m_licenseValid = {false};
 
-    int               m_activeModelIndex{0};
+    size_t            m_activeModelIndex{0};
     uint32_t          m_currentSampleRate{0};
     uint16_t          m_currentNumChannels{0};
     size_t            m_currentNumFrames{0};

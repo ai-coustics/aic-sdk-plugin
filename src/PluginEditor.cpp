@@ -57,25 +57,19 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
                               juce::RectanglePlacement::centred);
 }
 
-void AicDemoAudioProcessorEditor::resized()
-{
-    // This is generally where you'll want to lay out the positions of any
-    // subcomponents in your editor..
-}
+void AicDemoAudioProcessorEditor::resized() {}
 
 void AicDemoAudioProcessorEditor::timerCallback()
 {
-    if (processorRef.wasPrepareCalled())
+    if (processorRef.modelChanged())
     {
-        processorRef.acknowledgePrepareCall();
+        processorRef.acknowledgeModelChanged();
         updateModelInfo();
     }
 }
 
 void AicDemoAudioProcessorEditor::updateModelInfo()
 {
-    int selectedIndex = modelSelector.getSelectedItemIndex();
-
-    auto modelInfo = processorRef.getModelInfo(selectedIndex);
+    auto modelInfo = processorRef.getModelInfo();
     modelInfoBox.setModelInfo(modelInfo);
 }

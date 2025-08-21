@@ -118,7 +118,7 @@ void AicDemoAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
     m_currentNumChannels = static_cast<uint16_t>(getTotalNumInputChannels());
     m_currentNumFrames   = static_cast<size_t>(samplesPerBlock);
 
-    prepareModel();
+    initializeModel();
 }
 
 void AicDemoAudioProcessor::releaseResources()
@@ -170,15 +170,14 @@ void AicDemoAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     auto modelParameterValue = state.getRawParameterValue("model");
 
     // Convert model parameter to index
-    int modelIndex = static_cast<int>(modelParameterValue->load());
-    modelIndex     = juce::jlimit(0, static_cast<int>(numModels - 1), modelIndex);
+    size_t modelIndex = static_cast<size_t>(modelParameterValue->load());
 
     // update model if model changed
     if (m_activeModelIndex != modelIndex)
     {
         m_activeModelIndex = modelIndex;
         createModel(m_activeModelIndex);
-        prepareModel();
+        initializeModel();
     }
 
     if (!m_model)

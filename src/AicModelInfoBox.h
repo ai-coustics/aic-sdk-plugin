@@ -7,7 +7,7 @@
 
 namespace aic::ui
 {
-struct ModelUiInfo
+struct ModelInfo
 {
     std::string modelSampleRate;
     std::string modelWindowLength;
@@ -17,11 +17,11 @@ struct ModelUiInfo
     bool        isModelRunning;
 
     // Constructor for easy initialization
-    ModelUiInfo() = default;
+    ModelInfo() = default;
 
-    ModelUiInfo(const bool modelRunning) : isModelRunning(modelRunning) {}
+    ModelInfo(const bool modelRunning) : isModelRunning(modelRunning) {}
 
-    ModelUiInfo(const int sr, const int w, const int md, const int nf, const int od)
+    ModelInfo(const int sr, const int w, const int md, const int nf, const int od)
         : modelSampleRate(std::to_string(sr) + " Hz"), modelWindowLength(std::to_string(w) + " ms"),
           modelDelay(std::to_string(md) + " ms"), optimalNumFrames(std::to_string(nf)),
           currentOutputDelay(std::to_string(od) + " ms")
@@ -40,14 +40,14 @@ class AicModelInfoBox : public juce::Component
     }
 
     // Method to update model information
-    void setModelInfo(const ModelUiInfo& info)
+    void setModelInfo(const ModelInfo& info)
     {
         modelInfo = info;
         repaint(); // Trigger a repaint to show updated info
     }
 
     // Getter for current model info
-    const ModelUiInfo& getModelInfo() const
+    const ModelInfo& getModelInfo() const
     {
         return modelInfo;
     }
@@ -95,6 +95,6 @@ class AicModelInfoBox : public juce::Component
     }
 
   private:
-    ModelUiInfo modelInfo;
+    ModelInfo modelInfo;
 };
 } // namespace aic::ui
