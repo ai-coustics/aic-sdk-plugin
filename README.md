@@ -3,8 +3,8 @@
 ### Build
 
 ```sh
-cmake -B build
-cmake --build build --config Release -j
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
 ```
 
 ### Dependencies
