@@ -9,6 +9,85 @@ namespace ui
 {
 
 /**
+ * @brief A simple error dialog component for displaying error messages.
+ *
+ * This component presents a modal error dialog window that displays an error message
+ * with an OK button to dismiss it. The dialog is styled consistently with the
+ * LicenseDialog and provides a custom alternative to JUCE's AlertWindow.
+ */
+class ErrorDialog : public juce::Component, public juce::Button::Listener
+{
+  public:
+    /**
+     * @brief Callback function type for handling dialog close events.
+     */
+    using CloseCallback = std::function<void()>;
+
+    /**
+     * @brief Constructs a new Error Dialog.
+     *
+     * @param title The title text to display in the dialog
+     * @param message The error message to display
+     */
+    ErrorDialog(const juce::String& title, const juce::String& message);
+
+    /**
+     * @brief Destructor.
+     */
+    ~ErrorDialog() override = default;
+
+    //==============================================================================
+    // Component overrides
+    void paint(juce::Graphics& g) override;
+    void resized() override;
+
+    //==============================================================================
+    // Button::Listener overrides
+    void buttonClicked(juce::Button* button) override;
+
+    //==============================================================================
+    // Component overrides
+    bool keyPressed(const juce::KeyPress& key) override;
+
+    /**
+     * @brief Shows the error dialog as a modal component.
+     *
+     * @param parentComponent The parent component to attach this dialog to
+     */
+    void showDialog(juce::Component* parentComponent);
+
+    /**
+     * @brief Sets a callback to be invoked when the dialog is closed.
+     *
+     * @param callback Function to call when the dialog closes
+     */
+    void setCloseCallback(CloseCallback callback);
+
+    /**
+     * @brief Closes the dialog.
+     */
+    void closeDialog();
+
+  private:
+    //==============================================================================
+    // UI Components
+    std::unique_ptr<juce::Drawable> m_alertTriangle;
+    juce::Label                     m_titleLabel;
+    juce::Label                     m_messageLabel;
+    juce::TextButton                m_okButton;
+
+    // Callback for dialog close events
+    CloseCallback m_closeCallback;
+
+    /**
+     * @brief Sets up the UI components with appropriate styling and properties.
+     */
+    void setupComponents();
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ErrorDialog)
+};
+
+/**
  * @brief A dialog component for entering and validating license keys.
  *
  * This component presents a modal dialog window that prompts the user to enter
@@ -112,6 +191,9 @@ class LicenseDialog : public juce::Component, public juce::Button::Listener
     // Modal component for showing the dialog
     std::unique_ptr<juce::Component> m_modalComponent;
 
+    // Error dialog for custom error messages
+    std::unique_ptr<ErrorDialog> m_errorDialog;
+
     /**
      * @brief Handles the OK button click or Enter key press.
      */
@@ -126,6 +208,14 @@ class LicenseDialog : public juce::Component, public juce::Button::Listener
      * @brief Sets up the UI components with appropriate styling and properties.
      */
     void setupComponents();
+
+    /**
+     * @brief Shows a custom error dialog with the specified title and message.
+     *
+     * @param title The title text to display in the error dialog
+     * @param message The error message to display
+     */
+    void showErrorDialog(const juce::String& title, const juce::String& message);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LicenseDialog)
 };
