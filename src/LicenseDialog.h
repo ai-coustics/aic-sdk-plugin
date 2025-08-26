@@ -78,6 +78,7 @@ class LicenseDialog : public juce::Component, public juce::Button::Listener
     // UI Components
     juce::Label      m_titleLabel;
     juce::Label      m_instructionLabel;
+    juce::Label      m_licenseLabel;
     juce::TextEditor m_licenseKeyEditor;
     juce::TextButton m_okButton;
     juce::TextButton m_cancelButton;

@@ -1,11 +1,18 @@
 #include "LicenseDialog.h"
 
 #include "AicColours.h"
+#include "juce_events/juce_events.h"
+#include "juce_graphics/juce_graphics.h"
+#include "juce_gui_basics/juce_gui_basics.h"
 
 namespace aic
 {
 namespace ui
 {
+
+class TextEditorLnf : public juce::LookAndFeel_V4
+{
+};
 
 LicenseDialog::LicenseDialog(LicenseCallback callback) : m_licenseCallback(std::move(callback))
 {
@@ -16,19 +23,28 @@ void LicenseDialog::setupComponents()
 {
     // Title label
     m_titleLabel.setText("License Required", juce::dontSendNotification);
-    m_titleLabel.setFont(juce::Font(18.0f, juce::Font::bold));
-    m_titleLabel.setJustificationType(juce::Justification::centred);
-    m_titleLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    m_titleLabel.setFont(
+        juce::Font(juce::Font::getDefaultSansSerifFontName(), 18.0f, juce::Font::plain));
+    m_titleLabel.setJustificationType(juce::Justification::left);
+    m_titleLabel.setColour(juce::Label::textColourId, aic::ui::BLACK_100);
     addAndMakeVisible(m_titleLabel);
 
     // Instruction label
-    m_instructionLabel.setText(
-        "Please enter your AIC SDK license key to continue using this plugin.",
-        juce::dontSendNotification);
-    m_instructionLabel.setFont(juce::Font(14.0f));
-    m_instructionLabel.setJustificationType(juce::Justification::centred);
-    m_instructionLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    m_instructionLabel.setText("Please enter your AIC SDK license key to continue using this "
+                               "plugin. Contact: info@ai-coustics.com.",
+                               juce::dontSendNotification);
+    m_instructionLabel.setFont(
+        juce::Font(juce::Font::getDefaultSansSerifFontName(), 16.0f, juce::Font::plain));
+    m_instructionLabel.setJustificationType(juce::Justification::left);
+    m_instructionLabel.setColour(juce::Label::textColourId, aic::ui::BLACK_60);
     addAndMakeVisible(m_instructionLabel);
+
+    m_licenseLabel.setText("License Key", juce::dontSendNotification);
+    m_licenseLabel.setFont(
+        juce::Font(juce::Font::getDefaultSansSerifFontName(), 16.0f, juce::Font::plain));
+    m_licenseLabel.setJustificationType(juce::Justification::left);
+    m_licenseLabel.setColour(juce::Label::textColourId, aic::ui::BLACK_100);
+    addAndMakeVisible(m_licenseLabel);
 
     // License key text editor
     m_licenseKeyEditor.setMultiLine(false);
@@ -38,67 +54,55 @@ void LicenseDialog::setupComponents()
     m_licenseKeyEditor.setCaretVisible(true);
     m_licenseKeyEditor.setPopupMenuEnabled(true);
     m_licenseKeyEditor.setFont(
-        juce::Font(juce::Font::getDefaultMonospacedFontName(), 12.0f, juce::Font::plain));
-    m_licenseKeyEditor.setColour(juce::TextEditor::backgroundColourId, aic::ui::BLACK_70);
-    m_licenseKeyEditor.setColour(juce::TextEditor::textColourId, juce::Colours::white);
-    m_licenseKeyEditor.setColour(juce::TextEditor::highlightColourId, aic::ui::BLUE_50);
-    m_licenseKeyEditor.setColour(juce::TextEditor::outlineColourId, aic::ui::BLACK_60);
-    m_licenseKeyEditor.setColour(juce::TextEditor::focusedOutlineColourId, aic::ui::BLUE_50);
+        juce::Font(juce::Font::getDefaultSansSerifFontName(), 16.0f, juce::Font::plain));
+    m_licenseKeyEditor.setColour(juce::TextEditor::backgroundColourId, aic::ui::BLACK_0);
+    m_licenseKeyEditor.setColour(juce::TextEditor::textColourId, aic::ui::BLACK_100);
+    m_licenseKeyEditor.setColour(juce::TextEditor::highlightColourId, aic::ui::BLUE_10);
+    m_licenseKeyEditor.setColour(juce::TextEditor::outlineColourId, aic::ui::BLACK_20);
+    m_licenseKeyEditor.setColour(juce::TextEditor::focusedOutlineColourId, aic::ui::BLACK_70);
     addAndMakeVisible(m_licenseKeyEditor);
 
     // OK button
-    m_okButton.setButtonText("OK");
-    m_okButton.setColour(juce::TextButton::buttonColourId, aic::ui::BLUE_50);
+    m_okButton.setButtonText("Activate License");
+    m_okButton.setColour(juce::TextButton::buttonColourId, aic::ui::BLACK_100);
     m_okButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
     m_okButton.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
     m_okButton.addListener(this);
     addAndMakeVisible(m_okButton);
 
-    // Cancel button
-    m_cancelButton.setButtonText("Cancel");
-    m_cancelButton.setColour(juce::TextButton::buttonColourId, aic::ui::BLACK_60);
-    m_cancelButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
-    m_cancelButton.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
-    m_cancelButton.addListener(this);
-    addAndMakeVisible(m_cancelButton);
-
     // Set dialog size
-    setSize(400, 200);
+    setSize(415, 220);
 }
 
 void LicenseDialog::paint(juce::Graphics& g)
 {
     // Fill background with semi-transparent dark color
-    g.fillAll(aic::ui::BLACK_100);
-
-    // Draw border
-    g.setColour(aic::ui::BLACK_60);
-    g.drawRect(getLocalBounds(), 1);
+    auto bounds = getLocalBounds();
+    g.setColour(aic::ui::BLACK_15);
+    g.fillRoundedRectangle(bounds.toFloat(), 16.f);
 }
 
 void LicenseDialog::resized()
 {
-    auto area = getLocalBounds().reduced(20);
+    auto area = getLocalBounds().reduced(24);
 
     // Title
     m_titleLabel.setBounds(area.removeFromTop(30));
-    area.removeFromTop(10); // spacing
+    area.removeFromTop(8); // spacing
 
     // Instruction text
     m_instructionLabel.setBounds(area.removeFromTop(40));
-    area.removeFromTop(15); // spacing
+    area.removeFromTop(24); // spacing
 
     // License key input
+    m_licenseLabel.setBounds(area.removeFromTop(24));
+    area.removeFromTop(8);
     m_licenseKeyEditor.setBounds(area.removeFromTop(25));
     area.removeFromTop(20); // spacing
 
-    // Buttons
-    auto buttonArea  = area.removeFromBottom(30);
-    auto buttonWidth = 80;
-    auto spacing     = 10;
-
-    m_cancelButton.setBounds(buttonArea.removeFromRight(buttonWidth));
-    buttonArea.removeFromRight(spacing);
+    // Button
+    auto buttonArea  = area.removeFromBottom(40);
+    auto buttonWidth = 147;
     m_okButton.setBounds(buttonArea.removeFromRight(buttonWidth));
 }
 
@@ -108,10 +112,6 @@ void LicenseDialog::buttonClicked(juce::Button* button)
     {
         handleOkAction();
     }
-    else if (button == &m_cancelButton)
-    {
-        handleCancelAction();
-    }
 }
 
 bool LicenseDialog::keyPressed(const juce::KeyPress& key)
@@ -119,11 +119,6 @@ bool LicenseDialog::keyPressed(const juce::KeyPress& key)
     if (key == juce::KeyPress::returnKey)
     {
         handleOkAction();
-        return true;
-    }
-    else if (key == juce::KeyPress::escapeKey)
-    {
-        handleCancelAction();
         return true;
     }
 
@@ -137,8 +132,8 @@ void LicenseDialog::handleOkAction()
     if (licenseKey.trim().isEmpty())
     {
         juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::WarningIcon,
-                                               "Invalid License Key",
-                                               "Please enter a valid license key.", "OK");
+                                               "Invalid License Key", "Please enter a license key.",
+                                               "OK");
         return;
     }
 
@@ -148,9 +143,9 @@ void LicenseDialog::handleOkAction()
     }
     else
     {
-        juce::AlertWindow::showMessageBoxAsync(
-            juce::AlertWindow::WarningIcon, "Invalid License Key",
-            "The license key you entered is not valid. Please check and try again.", "OK");
+        juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::WarningIcon,
+                                               "Invalid License Key",
+                                               "The license key you entered is not valid.", "OK");
         m_licenseKeyEditor.selectAll();
         m_licenseKeyEditor.grabKeyboardFocus();
     }
@@ -166,19 +161,27 @@ void LicenseDialog::showDialog(juce::Component* parentComponent)
     if (parentComponent == nullptr)
         return;
 
-    // Center the dialog on the parent component
-    auto parentBounds = parentComponent->getLocalBounds();
+    // Get the top-level component (usually the plugin window)
+    auto* topLevel = parentComponent->getTopLevelComponent();
+    if (topLevel == nullptr)
+        topLevel = parentComponent;
+
+    // Center the dialog on screen coordinates
+    auto screenBounds = topLevel->getScreenBounds();
     auto dialogBounds =
-        juce::Rectangle<int>(getWidth(), getHeight()).withCentre(parentBounds.getCentre());
+        juce::Rectangle<int>(getWidth(), getHeight()).withCentre(screenBounds.getCentre());
+
+    // Convert to local coordinates of the parent
+    dialogBounds = parentComponent->getLocalArea(nullptr, dialogBounds);
     setBounds(dialogBounds);
 
-    // Add as modal component
+    // Add as child component
     parentComponent->addAndMakeVisible(this);
 
     // Focus the license input
     focusLicenseInput();
 
-    // Make it modal
+    // This will deactivate the component below
     enterModalState(true);
 }
 
