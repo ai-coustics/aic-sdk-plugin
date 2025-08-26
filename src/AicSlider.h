@@ -107,65 +107,7 @@ class AicSlider : public juce::Slider
         setLookAndFeel(nullptr);
     }
 
-    void resized() override
-    {
-        // Ensure the component maintains its fixed size
-        // if (getWidth() != 419 || getHeight() != 80)
-        // {
-        //     setSize(419, 80);
-        // }
-        juce::Slider::resized();
-    }
-
-    // bool hitTest(int x, int y) override
-    // {
-    //     auto bounds = getLocalBounds();
-    //     bounds.removeFromLeft(10);
-    //     bounds.removeFromRight(10);
-    //     bounds.removeFromTop(45);
-    //     bounds.removeFromBottom(16);
-    //     return bounds.contains(x, y);
-    // }
-
-    // void mouseDown(const juce::MouseEvent& e) override
-    // {
-    //     auto remappedEvent = e.withNewPosition(remapMousePosition(e.getPosition()));
-    //     juce::Slider::mouseDown(remappedEvent);
-    // }
-
-    // void mouseDrag(const juce::MouseEvent& e) override
-    // {
-    //     auto remappedEvent = e.withNewPosition(remapMousePosition(e.getPosition()));
-    //     juce::Slider::mouseDrag(remappedEvent);
-    // }
-
   private:
-    juce::Rectangle<int> getReducedBounds() const
-    {
-        auto bounds = getLocalBounds();
-        // bounds.removeFromLeft(17);
-        // bounds.removeFromRight(17);
-        // bounds.removeFromTop(45);
-        // bounds.removeFromBottom(16);
-        return bounds;
-    }
-
-    // juce::Point<int> remapMousePosition(juce::Point<int> mousePos) const
-    // {
-    //     auto fullBounds    = getLocalBounds();
-    //     auto reducedBounds = getReducedBounds();
-
-    //     // Remap X coordinate from reduced bounds to full bounds
-    //     float ratio = (static_cast<float>(mousePos.x - reducedBounds.getX())) /
-    //                   (float) reducedBounds.getWidth();
-    //     ratio = juce::jlimit(0.0f, 1.0f, ratio);
-    //     int remappedX =
-    //         fullBounds.getX() + (int) (ratio * static_cast<float>(fullBounds.getWidth()));
-    //     return juce::Point<int>(remappedX, mousePos.y);
-
-    //     return mousePos; // For rotary sliders, no remapping needed
-    // }
-
     SliderLnF m_lnf;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AicSlider)
