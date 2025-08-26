@@ -32,7 +32,7 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize(454, 490);
+    setSize(454, 468);
 }
 
 AicDemoAudioProcessorEditor::~AicDemoAudioProcessorEditor()
@@ -48,7 +48,7 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
     g.setColour(aic::ui::BLACK_70);
 
     auto bounds = getLocalBounds();
-    bounds.reduce(35.f, 36.f);
+    bounds.reduce(35.f, 33.f);
 
     g.setFont(14.f);
     g.drawText("License Active", bounds.removeFromTop(16), juce::Justification::centredRight);
@@ -66,7 +66,10 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
 
     bounds.removeFromTop(24.f);
 
-    enhancementSlider.setBounds(bounds.removeFromTop(80));
+    g.setFont(16.f);
+    g.drawText("Enhancement Level", bounds.removeFromTop(24), juce::Justification::centredLeft);
+
+    enhancementSlider.setBounds(bounds.removeFromTop(54.f));
 
     bounds.removeFromTop(24.f);
 
