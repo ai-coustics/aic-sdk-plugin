@@ -94,6 +94,8 @@ class LicenseDialog : public juce::Component, public juce::Button::Listener
   private:
     //==============================================================================
     // UI Components
+    std::unique_ptr<juce::Drawable> m_alertTriangle;
+
     juce::Label      m_titleLabel;
     juce::Label      m_instructionLabel;
     juce::Label      m_licenseLabel;

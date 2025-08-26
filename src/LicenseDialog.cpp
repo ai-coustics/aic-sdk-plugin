@@ -1,6 +1,7 @@
 #include "LicenseDialog.h"
 
 #include "AicColours.h"
+#include "BinaryData.h"
 #include "juce_events/juce_events.h"
 #include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
@@ -21,6 +22,10 @@ LicenseDialog::LicenseDialog(LicenseCallback callback) : m_licenseCallback(std::
 
 void LicenseDialog::setupComponents()
 {
+    m_alertTriangle = juce::Drawable::createFromImageData(BinaryData::alerttriangle_svg,
+                                                          BinaryData::alerttriangle_svgSize);
+    addAndMakeVisible(m_alertTriangle.get());
+
     // Title label
     m_titleLabel.setText("License Required", juce::dontSendNotification);
     m_titleLabel.setFont(
@@ -60,7 +65,7 @@ void LicenseDialog::setupComponents()
     m_licenseKeyEditor.setColour(juce::TextEditor::highlightedTextColourId, aic::ui::BLACK_100);
     m_licenseKeyEditor.setColour(juce::TextEditor::highlightColourId, aic::ui::BLUE_10);
     m_licenseKeyEditor.setColour(juce::TextEditor::outlineColourId, aic::ui::BLACK_20);
-    m_licenseKeyEditor.setColour(juce::TextEditor::focusedOutlineColourId, aic::ui::BLACK_70);
+    m_licenseKeyEditor.setColour(juce::TextEditor::focusedOutlineColourId, aic::ui::BLACK_60);
     addAndMakeVisible(m_licenseKeyEditor);
 
     // OK button
@@ -89,8 +94,13 @@ void LicenseDialog::resized()
 {
     auto area = getLocalBounds().reduced(24);
 
+    auto firstLine = area.removeFromTop(24);
+    // Alert Triangle
+    m_alertTriangle->setTransformToFit(firstLine.removeFromLeft(24).reduced(0.f, 4.f).toFloat(),
+                                       juce::RectanglePlacement::centred);
+    firstLine.removeFromLeft(8.f);
     // Title
-    m_titleLabel.setBounds(area.removeFromTop(30));
+    m_titleLabel.setBounds(firstLine);
     area.removeFromTop(8); // spacing
 
     // Instruction text
@@ -100,12 +110,13 @@ void LicenseDialog::resized()
     // License key input
     m_licenseLabel.setBounds(area.removeFromTop(24));
     area.removeFromTop(8);
-    m_licenseKeyEditor.setBounds(area.removeFromTop(25));
-    area.removeFromTop(20); // spacing
+    m_licenseKeyEditor.setBounds(area.removeFromTop(30));
+    area.removeFromTop(32); // spacing
 
     // Buttons
-    auto buttonArea = area.removeFromBottom(40);
-    m_okButton.setBounds(buttonArea.removeFromRight(147));
+    m_okButton.setBounds(area.removeFromTop(40).removeFromRight(147));
+
+    std::cout << area.getHeight();
 }
 
 void LicenseDialog::buttonClicked(juce::Button* button)

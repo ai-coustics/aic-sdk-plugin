@@ -59,8 +59,9 @@ juce_add_plugin(${PROJECT_NAME}
 # cmake-format: on
 
 juce_add_binary_data(aic-data SOURCES
-    assets/milling.otf
-    assets/logo.svg)
+    assets/alerttriangle.svg
+    assets/logo.svg
+    assets/milling.otf)
 
 target_sources(${PROJECT_NAME} PRIVATE src/PluginEditor.cpp
                                        src/PluginProcessor.cpp
