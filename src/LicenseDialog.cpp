@@ -11,10 +11,6 @@ namespace aic
 namespace ui
 {
 
-class TextEditorLnf : public juce::LookAndFeel_V4
-{
-};
-
 //==============================================================================
 // ErrorDialog Implementation
 
@@ -35,22 +31,22 @@ void ErrorDialog::setupComponents()
     m_titleLabel.setFont(
         juce::Font(juce::Font::getDefaultSansSerifFontName(), 18.0f, juce::Font::plain));
     m_titleLabel.setJustificationType(juce::Justification::left);
-    m_titleLabel.setColour(juce::Label::textColourId, aic::ui::BLACK_100);
+    m_titleLabel.setColour(juce::Label::textColourId, aic::ui::BLACK_0);
     addAndMakeVisible(m_titleLabel);
 
     // Message label
     m_messageLabel.setFont(
         juce::Font(juce::Font::getDefaultSansSerifFontName(), 16.0f, juce::Font::plain));
     m_messageLabel.setJustificationType(juce::Justification::left);
-    m_messageLabel.setColour(juce::Label::textColourId, aic::ui::BLACK_60);
+    m_messageLabel.setColour(juce::Label::textColourId, aic::ui::BLACK_15);
     m_messageLabel.setMinimumHorizontalScale(1.0f); // Allow text wrapping
     addAndMakeVisible(m_messageLabel);
 
     // OK button
     m_okButton.setButtonText("OK");
-    m_okButton.setColour(juce::TextButton::buttonColourId, aic::ui::BLACK_100);
-    m_okButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
-    m_okButton.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
+    m_okButton.setColour(juce::TextButton::buttonColourId, aic::ui::BLACK_0);
+    m_okButton.setColour(juce::TextButton::textColourOffId, aic::ui::BLACK_100);
+    m_okButton.setColour(juce::TextButton::textColourOnId, aic::ui::BLACK_100);
     m_okButton.addListener(this);
     addAndMakeVisible(m_okButton);
 
@@ -62,9 +58,9 @@ void ErrorDialog::paint(juce::Graphics& g)
 {
     // Fill background with solid color to make dialog visible over overlay
     auto bounds = getLocalBounds();
-    g.setColour(aic::ui::BLACK_0);
-    g.fillRoundedRectangle(bounds.toFloat(), 16.f);
     g.setColour(aic::ui::BLACK_100);
+    g.fillRoundedRectangle(bounds.toFloat(), 16.f);
+    g.setColour(aic::ui::BLACK_0);
     g.drawRoundedRectangle(bounds.toFloat(), 16.f, 1.f);
 }
 
@@ -191,7 +187,7 @@ void LicenseDialog::setupComponents()
     addAndMakeVisible(m_titleLabel);
 
     // Instruction label
-    m_instructionLabel.setText("Please enter your AIC SDK license key to continue using this "
+    m_instructionLabel.setText("Please enter your license key to continue using this "
                                "plugin. Contact: info@ai-coustics.com.",
                                juce::dontSendNotification);
     m_instructionLabel.setFont(
