@@ -32,6 +32,14 @@ class LicenseDialog : public juce::Component, public juce::Button::Listener
     using LicenseCallback = std::function<bool(const juce::String& licenseKey)>;
 
     /**
+     * @brief Callback function type for handling dialog close events.
+     *
+     * This callback is invoked whenever the dialog is closed, regardless of
+     * whether it was closed via successful validation, cancellation, or other means.
+     */
+    using CloseCallback = std::function<void()>;
+
+    /**
      * @brief Constructs a new License Dialog.
      *
      * @param callback Function to call when the user submits a license key
@@ -64,6 +72,16 @@ class LicenseDialog : public juce::Component, public juce::Button::Listener
     void showDialog(juce::Component* parentComponent);
 
     /**
+     * @brief Sets a callback to be invoked when the dialog is closed.
+     *
+     * This callback will be called whenever the dialog closes, regardless of
+     * whether it was closed via successful validation, cancellation, or other means.
+     *
+     * @param callback Function to call when the dialog closes
+     */
+    void setCloseCallback(CloseCallback callback);
+
+    /**
      * @brief Closes the dialog.
      */
     void closeDialog();
@@ -85,6 +103,9 @@ class LicenseDialog : public juce::Component, public juce::Button::Listener
 
     // Callback for license validation
     LicenseCallback m_licenseCallback;
+
+    // Callback for dialog close events
+    CloseCallback m_closeCallback;
 
     // Modal component for showing the dialog
     std::unique_ptr<juce::Component> m_modalComponent;

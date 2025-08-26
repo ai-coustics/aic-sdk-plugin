@@ -16,6 +16,9 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
       m_licenseDialog([this](const juce::String& licenseKey)
                       { return handleLicenseValidation(licenseKey); })
 {
+    // Set up close callback for license dialog to hide overlay when closed
+    m_licenseDialog.setCloseCallback([this]() { hideModalOverlay(); });
+
     getLookAndFeel().setDefaultSansSerifTypeface(getFont());
 
     addAndMakeVisible(enhancementSlider);
@@ -33,7 +36,13 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
     if (!processorRef.isLicenseValid())
     {
         // Use a timer to show the license dialog after the component is fully constructed
-        juce::Timer::callAfterDelay(100, [this]() { m_licenseDialog.showDialog(this); });
+        juce::Timer::callAfterDelay(100,
+                                    [this]()
+                                    {
+                                        showModalOverlay();
+                                        m_licenseDialog.showDialog(this);
+                                        m_licenseDialog.toFront(false);
+                                    });
     }
 
     startTimer(100);
@@ -85,7 +94,14 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
                               juce::RectanglePlacement::centred);
 }
 
-void AicDemoAudioProcessorEditor::resized() {}
+void AicDemoAudioProcessorEditor::resized()
+{
+    // Update modal overlay bounds if it's currently visible
+    if (m_modalOverlay && m_modalOverlay->isVisible())
+    {
+        m_modalOverlay->setBounds(getLocalBounds());
+    }
+}
 
 void AicDemoAudioProcessorEditor::timerCallback()
 {
@@ -101,6 +117,7 @@ void AicDemoAudioProcessorEditor::timerCallback()
         // If license became invalid, show the dialog
         if (!currentLicenseState)
         {
+            showModalOverlay();
             m_licenseDialog.showDialog(this);
         }
     }
@@ -116,6 +133,26 @@ void AicDemoAudioProcessorEditor::updateModelInfo()
 {
     auto modelInfo = processorRef.getModelInfo();
     modelInfoBox.setModelInfo(modelInfo);
+}
+
+void AicDemoAudioProcessorEditor::showModalOverlay()
+{
+    if (!m_modalOverlay)
+    {
+        m_modalOverlay = std::make_unique<ModalOverlay>();
+    }
+
+    addAndMakeVisible(m_modalOverlay.get());
+    m_modalOverlay->setBounds(getLocalBounds());
+    m_modalOverlay->toBack(); // Keep overlay behind other components
+}
+
+void AicDemoAudioProcessorEditor::hideModalOverlay()
+{
+    if (m_modalOverlay)
+    {
+        removeChildComponent(m_modalOverlay.get());
+    }
 }
 
 bool AicDemoAudioProcessorEditor::handleLicenseValidation(const juce::String& licenseKey)

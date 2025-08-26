@@ -44,7 +44,35 @@ class AicDemoAudioProcessorEditor final : public juce::AudioProcessorEditor, pub
 
     std::unique_ptr<juce::Drawable> m_logo;
 
+    // Modal overlay component for dimming background when dialog is shown
+    class ModalOverlay : public juce::Component
+    {
+      public:
+        void paint(juce::Graphics& g) override
+        {
+            g.fillAll(juce::Colours::black.withAlpha(0.6f));
+        }
+    };
+
+    std::unique_ptr<ModalOverlay> m_modalOverlay;
+
     void updateModelInfo();
+
+    /**
+     * @brief Shows a modal overlay that darkens the background.
+     *
+     * Creates and displays a semi-transparent overlay component that covers
+     * the entire editor area, providing visual focus for modal dialogs.
+     */
+    void showModalOverlay();
+
+    /**
+     * @brief Hides the modal overlay.
+     *
+     * Removes the overlay component from the editor, returning the UI
+     * to its normal appearance.
+     */
+    void hideModalOverlay();
 
     /**
      * @brief Handles license key validation when user submits a key through the dialog.

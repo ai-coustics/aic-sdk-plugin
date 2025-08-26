@@ -57,6 +57,7 @@ void LicenseDialog::setupComponents()
         juce::Font(juce::Font::getDefaultSansSerifFontName(), 16.0f, juce::Font::plain));
     m_licenseKeyEditor.setColour(juce::TextEditor::backgroundColourId, aic::ui::BLACK_0);
     m_licenseKeyEditor.setColour(juce::TextEditor::textColourId, aic::ui::BLACK_100);
+    m_licenseKeyEditor.setColour(juce::TextEditor::highlightedTextColourId, aic::ui::BLACK_100);
     m_licenseKeyEditor.setColour(juce::TextEditor::highlightColourId, aic::ui::BLUE_10);
     m_licenseKeyEditor.setColour(juce::TextEditor::outlineColourId, aic::ui::BLACK_20);
     m_licenseKeyEditor.setColour(juce::TextEditor::focusedOutlineColourId, aic::ui::BLACK_70);
@@ -71,15 +72,17 @@ void LicenseDialog::setupComponents()
     addAndMakeVisible(m_okButton);
 
     // Set dialog size
-    setSize(415, 220);
+    setSize(415, 300);
 }
 
 void LicenseDialog::paint(juce::Graphics& g)
 {
-    // Fill background with semi-transparent dark color
+    // Fill background with solid color to make dialog visible over overlay
     auto bounds = getLocalBounds();
-    g.setColour(aic::ui::BLACK_15);
+    g.setColour(aic::ui::BLACK_0);
     g.fillRoundedRectangle(bounds.toFloat(), 16.f);
+    g.setColour(aic::ui::BLACK_15);
+    g.drawRoundedRectangle(bounds.toFloat(), 16.f, 1.f);
 }
 
 void LicenseDialog::resized()
@@ -100,10 +103,9 @@ void LicenseDialog::resized()
     m_licenseKeyEditor.setBounds(area.removeFromTop(25));
     area.removeFromTop(20); // spacing
 
-    // Button
-    auto buttonArea  = area.removeFromBottom(40);
-    auto buttonWidth = 147;
-    m_okButton.setBounds(buttonArea.removeFromRight(buttonWidth));
+    // Buttons
+    auto buttonArea = area.removeFromBottom(40);
+    m_okButton.setBounds(buttonArea.removeFromRight(147));
 }
 
 void LicenseDialog::buttonClicked(juce::Button* button)
@@ -151,6 +153,11 @@ void LicenseDialog::handleOkAction()
     }
 }
 
+void LicenseDialog::setCloseCallback(CloseCallback callback)
+{
+    m_closeCallback = std::move(callback);
+}
+
 void LicenseDialog::handleCancelAction()
 {
     closeDialog();
@@ -193,6 +200,12 @@ void LicenseDialog::closeDialog()
     }
 
     exitModalState(0);
+
+    // Call the close callback if set
+    if (m_closeCallback)
+    {
+        m_closeCallback();
+    }
 }
 
 void LicenseDialog::focusLicenseInput()
