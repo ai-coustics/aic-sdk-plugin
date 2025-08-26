@@ -71,11 +71,21 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
 
     juce::AudioProcessorValueTreeState state;
 
+    /**
+     * @brief Checks if the current license key is valid.
+     *
+     * @return true if the license is valid and models can be created, false otherwise
+     */
     bool isLicenseValid() const
     {
         return m_licenseValid.load();
     }
 
+    /**
+     * @brief Gets the expected path for the license file.
+     *
+     * @return String containing the full path to the expected license file location
+     */
     juce::String getExpectedLicensePath()
     {
         juce::File appDataDir =
@@ -86,6 +96,11 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
         return licenseFile.getFullPathName();
     }
 
+    /**
+     * @brief Gets the license file object.
+     *
+     * @return File object pointing to the license file location
+     */
     juce::File getLicenseFile()
     {
         juce::File appDataDir =
@@ -95,6 +110,46 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
 
         return licenseFile;
     }
+
+    /**
+     * @brief Validates a license key by attempting to create a model with it.
+     *
+     * This method tests the provided license key by creating a temporary model
+     * and checking if the creation succeeds.
+     *
+     * @param licenseKey The license key to validate
+     * @return true if the license key is valid and can create models, false otherwise
+     */
+    bool validateLicenseKey(const juce::String& licenseKey);
+
+    /**
+     * @brief Saves a license key to the application's license file.
+     *
+     * Creates the necessary directory structure if it doesn't exist and
+     * saves the license key to the standard location.
+     *
+     * @param licenseKey The license key to save
+     * @return true if the license was saved successfully, false otherwise
+     */
+    bool saveLicenseKey(const juce::String& licenseKey);
+
+    /**
+     * @brief Loads and validates the license key from the application directory.
+     *
+     * Attempts to load the license key from the standard location and validate it.
+     * Updates the internal license state accordingly.
+     *
+     * @return true if a valid license was found and loaded, false otherwise
+     */
+    bool loadAndValidateLicense();
+
+    /**
+     * @brief Forces recreation of the current model with the updated license.
+     *
+     * This method should be called after a license change to ensure the model
+     * is recreated with the new license key and properly initialized.
+     */
+    void forceModelRecreation();
 
     aic::ui::ModelInfo getModelInfo() const
     {
@@ -128,12 +183,31 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
     }
 
   private:
+    /**
+     * @brief Creates a new model instance with the current license key.
+     *
+     * Attempts to create a model of the specified type using the currently
+     * stored license key. Updates the license validity state based on whether
+     * model creation succeeds.
+     *
+     * @param index Index of the model type to create (will be clamped to valid range)
+     */
     void createModel(size_t index)
     {
         index = static_cast<size_t>(
             juce::jlimit(0, static_cast<int>(m_numModels - 1), static_cast<int>(index)));
+
+        // Only attempt to create model if we have a license key
+        if (m_licenseKey.empty())
+        {
+            m_licenseValid.store(false);
+            m_model        = nullptr;
+            m_modelRunning = false;
+            return;
+        }
+
         auto [model, errorCode] = aic::AicModel::create(modelInfos[index].modelType, m_licenseKey);
-        if (model)
+        if (model && errorCode == aic::ErrorCode::Success)
         {
             m_licenseValid.store(true);
             m_model = std::move(model);
@@ -141,7 +215,8 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
         else
         {
             m_licenseValid.store(false);
-            m_model = nullptr;
+            m_model        = nullptr;
+            m_modelRunning = false;
         }
     }
 

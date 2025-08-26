@@ -4,6 +4,7 @@
 #include "AicModelInfoBox.h"
 #include "BinaryData.h"
 #include "PluginProcessor.h"
+#include "juce_gui_basics/juce_gui_basics.h"
 
 #include <juce_graphics/juce_graphics.h>
 
@@ -11,7 +12,9 @@
 AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& p)
     : AudioProcessorEditor(&p), processorRef(p),
       modelSelectorAttachment(p.state, "model", modelSelector),
-      enhancementAttachment(p.state, "enhancement", enhancementSlider)
+      enhancementAttachment(p.state, "enhancement", enhancementSlider),
+      m_licenseDialog([this](const juce::String& licenseKey)
+                      { return handleLicenseValidation(licenseKey); })
 {
     getLookAndFeel().setDefaultSansSerifTypeface(getFont());
 
@@ -25,6 +28,13 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
 
     m_logo = juce::Drawable::createFromImageData(BinaryData::logo_svg, BinaryData::logo_svgSize);
     addAndMakeVisible(m_logo.get());
+
+    // Check if license is valid and show dialog if needed
+    if (!processorRef.isLicenseValid())
+    {
+        // Use a timer to show the license dialog after the component is fully constructed
+        juce::Timer::callAfterDelay(100, [this]() { m_licenseDialog.showDialog(this); });
+    }
 
     startTimer(100);
 
@@ -51,8 +61,14 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
     bounds.reduce(35.f, 33.f);
 
     g.setFont(14.f);
-    g.drawText("License Active", bounds.removeFromTop(16), juce::Justification::centredRight);
+    juce::String licenseStatus =
+        processorRef.isLicenseValid() ? "License Active" : "License Invalid";
+    juce::Colour licenseColor =
+        processorRef.isLicenseValid() ? aic::ui::BLACK_70 : juce::Colours::red;
+    g.setColour(licenseColor);
+    g.drawText(licenseStatus, bounds.removeFromTop(16), juce::Justification::centredRight);
 
+    g.setColour(aic::ui::BLACK_70);
     g.setFont(16.f);
     g.drawText("Model", bounds.removeFromTop(24), juce::Justification::centredLeft);
 
@@ -81,6 +97,22 @@ void AicDemoAudioProcessorEditor::resized() {}
 
 void AicDemoAudioProcessorEditor::timerCallback()
 {
+    static bool lastLicenseState    = processorRef.isLicenseValid();
+    bool        currentLicenseState = processorRef.isLicenseValid();
+
+    // Check if license state changed
+    if (lastLicenseState != currentLicenseState)
+    {
+        lastLicenseState = currentLicenseState;
+        repaint(); // Repaint to update license status display
+
+        // If license became invalid, show the dialog
+        if (!currentLicenseState)
+        {
+            m_licenseDialog.showDialog(this);
+        }
+    }
+
     if (processorRef.modelChanged())
     {
         processorRef.acknowledgeModelChanged();
@@ -92,4 +124,40 @@ void AicDemoAudioProcessorEditor::updateModelInfo()
 {
     auto modelInfo = processorRef.getModelInfo();
     modelInfoBox.setModelInfo(modelInfo);
+}
+
+bool AicDemoAudioProcessorEditor::handleLicenseValidation(const juce::String& licenseKey)
+{
+    // Trim whitespace from the license key
+    juce::String trimmedKey = licenseKey.trim();
+
+    if (trimmedKey.isEmpty())
+    {
+        return false; // Empty license key is invalid
+    }
+
+    // Validate the license key using the processor
+    if (processorRef.validateLicenseKey(trimmedKey))
+    {
+        // License is valid, save it and update the processor's license
+        if (processorRef.saveLicenseKey(trimmedKey))
+        {
+            // Reload and validate the license in the processor
+            if (processorRef.loadAndValidateLicense())
+            {
+                // Force recreation of the current model with the new license
+                processorRef.forceModelRecreation();
+
+                // Force update the model info since we now have a valid license
+                updateModelInfo();
+
+                // Trigger a repaint to update the license status display
+                repaint();
+
+                return true; // License accepted, close dialog
+            }
+        }
+    }
+
+    return false; // License invalid or save failed, keep dialog open
 }

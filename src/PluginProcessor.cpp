@@ -24,27 +24,14 @@ AicDemoAudioProcessor::AicDemoAudioProcessor()
              std::make_unique<juce::AudioParameterBool>(juce::ParameterID{"noisegateenable", 0},
                                                         "Noise Gate Enable", true)})
 {
-    // Load license key
-    juce::File licenseFile = getLicenseFile();
+    // Load and validate license key
+    loadAndValidateLicense();
 
-    if (licenseFile.existsAsFile())
+    // Only create model if license is valid
+    if (isLicenseValid())
     {
-        juce::FileInputStream stream(licenseFile);
-        if (stream.openedOk())
-        {
-            m_licenseKey = stream.readEntireStreamAsString().toStdString();
-        }
-        else
-        {
-            DBG("Failed to open license file!");
-        }
+        createModel(m_activeModelIndex);
     }
-    else
-    {
-        DBG("License file not found!");
-    }
-
-    createModel(m_activeModelIndex);
 }
 
 //==============================================================================
@@ -176,13 +163,17 @@ void AicDemoAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     if (m_activeModelIndex != modelIndex)
     {
         m_activeModelIndex = modelIndex;
-        createModel(m_activeModelIndex);
-        initializeModel();
+        // Only create model if we have a valid license
+        if (isLicenseValid())
+        {
+            createModel(m_activeModelIndex);
+            initializeModel();
+        }
     }
 
-    if (!m_model)
+    if (!m_model || !m_modelRunning || !isLicenseValid())
     {
-        // Model is nullptr, just return (audio passes through unchanged)
+        // Model is nullptr, not running, or license invalid - audio passes through unchanged
         return;
     }
 
@@ -226,6 +217,107 @@ void AicDemoAudioProcessor::setStateInformation(const void* data, int sizeInByte
     // Restore the plugin's state from the XML representation
     if (auto xmlState = getXmlFromBinary(data, sizeInBytes))
         state.replaceState(juce::ValueTree::fromXml(*xmlState));
+}
+
+bool AicDemoAudioProcessor::validateLicenseKey(const juce::String& licenseKey)
+{
+    if (licenseKey.trim().isEmpty())
+    {
+        return false;
+    }
+
+    // Test the license key by attempting to create a model
+    auto [testModel, errorCode] =
+        aic::AicModel::create(modelInfos[0].modelType, licenseKey.toStdString());
+    return testModel != nullptr && errorCode == aic::ErrorCode::Success;
+}
+
+bool AicDemoAudioProcessor::saveLicenseKey(const juce::String& licenseKey)
+{
+    juce::File licenseFile = getLicenseFile();
+
+    // Create directory if it doesn't exist
+    auto parentDir = licenseFile.getParentDirectory();
+    if (!parentDir.exists())
+    {
+        auto result = parentDir.createDirectory();
+        if (result.failed())
+        {
+            DBG("Failed to create license directory: " + result.getErrorMessage());
+            return false;
+        }
+    }
+
+    // Write the license key to file
+    juce::FileOutputStream stream(licenseFile);
+    if (stream.openedOk())
+    {
+        stream.writeText(licenseKey, false, false, nullptr);
+        stream.flush();
+        return true;
+    }
+    else
+    {
+        DBG("Failed to open license file for writing!");
+        return false;
+    }
+}
+
+bool AicDemoAudioProcessor::loadAndValidateLicense()
+{
+    juce::File licenseFile = getLicenseFile();
+
+    if (licenseFile.existsAsFile())
+    {
+        juce::FileInputStream stream(licenseFile);
+        if (stream.openedOk())
+        {
+            juce::String licenseKey = stream.readEntireStreamAsString().trim();
+
+            if (validateLicenseKey(licenseKey))
+            {
+                m_licenseKey = licenseKey.toStdString();
+                m_licenseValid.store(true);
+                return true;
+            }
+            else
+            {
+                DBG("Invalid license key found in file!");
+                m_licenseValid.store(false);
+                return false;
+            }
+        }
+        else
+        {
+            DBG("Failed to open license file!");
+            m_licenseValid.store(false);
+            return false;
+        }
+    }
+    else
+    {
+        DBG("License file not found!");
+        m_licenseValid.store(false);
+        return false;
+    }
+}
+
+void AicDemoAudioProcessor::forceModelRecreation()
+{
+    if (isLicenseValid())
+    {
+        // Get current model index
+        auto currentModelIndex = static_cast<size_t>(state.getRawParameterValue("model")->load());
+
+        // Recreate the model
+        createModel(currentModelIndex);
+
+        // Reinitialize if we have valid audio parameters
+        if (m_currentSampleRate > 0 && m_currentNumChannels > 0 && m_currentNumFrames > 0)
+        {
+            initializeModel();
+        }
+    }
 }
 
 //==============================================================================

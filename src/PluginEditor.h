@@ -4,6 +4,7 @@
 #include "AicModelSelector.h"
 #include "AicSlider.h"
 #include "BinaryData.h"
+#include "LicenseDialog.h"
 #include "PluginProcessor.h"
 
 //==============================================================================
@@ -39,9 +40,23 @@ class AicDemoAudioProcessorEditor final : public juce::AudioProcessorEditor, pub
     aic::ui::AicSlider                                   enhancementSlider;
     juce::AudioProcessorValueTreeState::SliderAttachment enhancementAttachment;
 
+    aic::ui::LicenseDialog m_licenseDialog;
+
     std::unique_ptr<juce::Drawable> m_logo;
 
     void updateModelInfo();
+
+    /**
+     * @brief Handles license key validation when user submits a key through the dialog.
+     *
+     * This method is called as a callback from the LicenseDialog when the user
+     * enters a license key and clicks OK. It validates the key using the processor,
+     * saves it if valid, and updates the UI accordingly.
+     *
+     * @param licenseKey The license key entered by the user
+     * @return true if the license key was valid and accepted, false otherwise
+     */
+    bool handleLicenseValidation(const juce::String& licenseKey);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AicDemoAudioProcessorEditor)
 };
