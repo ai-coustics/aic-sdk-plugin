@@ -5,8 +5,10 @@
 # Define source and destination paths
 VST3_SOURCE="./VST3/ai-coustics Demo.vst3"
 AU_SOURCE="./AU/ai-coustics Demo.component"
+STANDALONE_SOURCE="./Standalone/ai-coustics Demo.app"
 VST3_DEST="/Library/Audio/Plug-Ins/VST3"
 AU_DEST="/Library/Audio/Plug-Ins/Components"
+STANDALONE_DEST="/Applications"
 
 # Check if source files exist
 if [ ! -d "$VST3_SOURCE" ]; then
@@ -47,6 +49,21 @@ if cp -r "$AU_SOURCE" "$AU_DEST/"; then
     xattr -r -d com.apple.quarantine "$AU_DEST/ai-coustics Demo.component" 2>/dev/null || true
 else
     echo "Error: Failed to install AU plugin"
+    exit 1
+fi
+
+# Install Standalone application
+if [ ! -d "$STANDALONE_SOURCE" ]; then
+    echo "Error: Source Standalone app not found at: $STANDALONE_SOURCE"
+    exit 1
+fi
+
+echo "Installing Standalone application..."
+if cp -r "$STANDALONE_SOURCE" "$STANDALONE_DEST/"; then
+    echo "Successfully installed 'ai-coustics Demo.app' to $STANDALONE_DEST"
+    xattr -r -d com.apple.quarantine "$STANDALONE_DEST/ai-coustics Demo.app" 2>/dev/null || true
+else
+    echo "Error: Failed to install Standalone application"
     exit 1
 fi
 

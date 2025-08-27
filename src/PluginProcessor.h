@@ -153,22 +153,29 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
 
     aic::ui::ModelInfo getModelInfo() const
     {
-        if (m_model && m_modelRunning)
+        if (!m_licenseValid)
         {
-            // calculate outputDelay in ms
-            auto outputDelayMs = static_cast<int>(
-                juce::roundToInt((static_cast<double>(m_model->get_output_delay()) * 1000.0) /
-                                 static_cast<double>(m_currentSampleRate))); // ms
-
-            return aic::ui::ModelInfo(static_cast<int>(m_model->get_optimal_sample_rate()),
-                                      modelInfos[m_activeModelIndex].windowLengthMs,
-                                      modelInfos[m_activeModelIndex].modelDelayMs,
-                                      static_cast<int>(m_model->get_optimal_num_frames()),
-                                      outputDelayMs);
+            return aic::ui::ModelInfo(aic::ui::ModelState::LicenseInactive);
         }
         else
         {
-            return aic::ui::ModelInfo(false);
+            if (m_model && m_modelIsInitialized)
+            {
+                // calculate outputDelay in ms
+                auto outputDelayMs = static_cast<int>(
+                    juce::roundToInt((static_cast<double>(m_model->get_output_delay()) * 1000.0) /
+                                     static_cast<double>(m_currentSampleRate))); // ms
+
+                return aic::ui::ModelInfo(static_cast<int>(m_model->get_optimal_sample_rate()),
+                                          modelInfos[m_activeModelIndex].windowLengthMs,
+                                          modelInfos[m_activeModelIndex].modelDelayMs,
+                                          static_cast<int>(m_model->get_optimal_num_frames()),
+                                          outputDelayMs);
+            }
+            else
+            {
+                return aic::ui::ModelInfo(aic::ui::ModelState::WrongAudioSettings);
+            }
         }
     }
 
@@ -201,8 +208,8 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
         if (m_licenseKey.empty())
         {
             m_licenseValid.store(false);
-            m_model        = nullptr;
-            m_modelRunning = false;
+            m_model              = nullptr;
+            m_modelIsInitialized = false;
             return;
         }
 
@@ -215,8 +222,8 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
         else
         {
             m_licenseValid.store(false);
-            m_model        = nullptr;
-            m_modelRunning = false;
+            m_model              = nullptr;
+            m_modelIsInitialized = false;
         }
     }
 
@@ -226,7 +233,7 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
         {
             auto errorCode =
                 m_model->initialize(m_currentSampleRate, m_currentNumChannels, m_currentNumFrames);
-            m_modelRunning = errorCode == aic::ErrorCode::Success;
+            m_modelIsInitialized = errorCode == aic::ErrorCode::Success;
             m_modelChanged.store(true);
         }
     }
@@ -254,7 +261,7 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
     size_t            m_currentNumFrames{0};
     std::atomic<bool> m_modelChanged{false};
 
-    bool m_modelRunning{false};
+    bool m_modelIsInitialized{false};
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AicDemoAudioProcessor)

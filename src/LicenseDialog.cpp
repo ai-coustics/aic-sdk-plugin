@@ -22,8 +22,8 @@ ErrorDialog::ErrorDialog(const juce::String& title, const juce::String& message)
 
 void ErrorDialog::setupComponents()
 {
-    m_alertTriangle = juce::Drawable::createFromImageData(BinaryData::alerttriangle_svg,
-                                                          BinaryData::alerttriangle_svgSize);
+    m_alertTriangle = juce::Drawable::createFromImageData(BinaryData::alert_svg,
+                                                          BinaryData::alert_svgSize);
     addAndMakeVisible(m_alertTriangle.get());
 
     // Title label
@@ -174,8 +174,8 @@ LicenseDialog::LicenseDialog(LicenseCallback callback, bool isLicenseActive)
 
 void LicenseDialog::setupComponents()
 {
-    m_alertTriangle = juce::Drawable::createFromImageData(BinaryData::alerttriangle_svg,
-                                                          BinaryData::alerttriangle_svgSize);
+    m_alertTriangle = juce::Drawable::createFromImageData(BinaryData::alert_svg,
+                                                          BinaryData::alert_svgSize);
     addAndMakeVisible(m_alertTriangle.get());
 
     // Title label

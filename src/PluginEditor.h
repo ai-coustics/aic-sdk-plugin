@@ -22,8 +22,8 @@ class AicDemoAudioProcessorEditor final : public juce::AudioProcessorEditor, pub
 
     auto getFont() -> juce::Typeface::Ptr
     {
-        return juce::Typeface::createSystemTypefaceFor(BinaryData::milling_otf,
-                                                       BinaryData::milling_otfSize);
+        return juce::Typeface::createSystemTypefaceFor(BinaryData::aic_font_otf,
+                                                       BinaryData::aic_font_otfSize);
     }
 
   private:
@@ -42,7 +42,7 @@ class AicDemoAudioProcessorEditor final : public juce::AudioProcessorEditor, pub
 
     aic::ui::LicenseDialog m_licenseDialog;
 
-    juce::TextButton m_licenseButton;
+    juce::TextButton                m_licenseButton;
     std::unique_ptr<juce::Drawable> m_logo;
 
     // Modal overlay component for dimming background when dialog is shown

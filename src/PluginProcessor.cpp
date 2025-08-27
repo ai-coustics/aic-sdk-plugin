@@ -175,7 +175,7 @@ void AicDemoAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         }
     }
 
-    if (!m_model || !m_modelRunning || !isLicenseValid())
+    if (!m_model || !m_modelIsInitialized || !isLicenseValid())
     {
         // Model is nullptr, not running, or license invalid - audio passes through unchanged
         return;

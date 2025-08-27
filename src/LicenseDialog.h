@@ -198,7 +198,8 @@ class LicenseDialog : public juce::Component, public juce::Button::Listener
      */
     void focusLicenseInput();
 
-    void setLicenseActive(bool isActive) {
+    void setLicenseActive(bool isActive)
+    {
         m_isLicenseActive = isActive;
     }
 

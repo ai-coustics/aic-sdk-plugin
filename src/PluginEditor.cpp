@@ -14,7 +14,8 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
       modelSelectorAttachment(p.state, "model", modelSelector),
       enhancementAttachment(p.state, "enhancement", enhancementSlider),
       m_licenseDialog([this](const juce::String& licenseKey)
-                      { return handleLicenseValidation(licenseKey); }, processorRef.isLicenseValid())
+                      { return handleLicenseValidation(licenseKey); },
+                      processorRef.isLicenseValid())
 {
     // Set up close callback for license dialog to hide overlay when closed
     m_licenseDialog.setCloseCallback([this]() { hideModalOverlay(); });
@@ -39,7 +40,7 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
         static_cast<int>(processorRef.state.getRawParameterValue("model")->load()));
     addAndMakeVisible(modelInfoBox);
 
-    m_logo = juce::Drawable::createFromImageData(BinaryData::logo_svg, BinaryData::logo_svgSize);
+    m_logo = juce::Drawable::createFromImageData(BinaryData::aic_logo_svg, BinaryData::aic_logo_svgSize);
     addAndMakeVisible(m_logo.get());
 
     // Check if license is valid and show dialog if needed
@@ -124,7 +125,7 @@ void AicDemoAudioProcessorEditor::timerCallback()
     {
         lastLicenseState = currentLicenseState;
         updateLicenseButton(); // Update button text and color
-        repaint(); // Repaint to update license status display
+        repaint();             // Repaint to update license status display
 
         // If license became invalid, show the dialog
         if (!currentLicenseState)
@@ -211,7 +212,8 @@ bool AicDemoAudioProcessorEditor::handleLicenseValidation(const juce::String& li
 void AicDemoAudioProcessorEditor::updateLicenseButton()
 {
     juce::String buttonText = processorRef.isLicenseValid() ? "License Active" : "License Invalid";
-    juce::Colour buttonColor = processorRef.isLicenseValid() ? aic::ui::BLACK_70 : juce::Colours::red;
+    juce::Colour buttonColor =
+        processorRef.isLicenseValid() ? aic::ui::BLACK_70 : juce::Colours::red;
 
     m_licenseButton.setButtonText(buttonText);
     m_licenseButton.setColour(juce::TextButton::textColourOffId, buttonColor);

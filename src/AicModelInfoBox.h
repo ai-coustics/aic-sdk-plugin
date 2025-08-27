@@ -7,6 +7,14 @@
 
 namespace aic::ui
 {
+
+enum ModelState
+{
+    Initilized,
+    WrongAudioSettings,
+    LicenseInactive,
+};
+
 struct ModelInfo
 {
     std::string modelSampleRate;
@@ -14,19 +22,19 @@ struct ModelInfo
     std::string modelDelay;
     std::string optimalNumFrames;
     std::string currentOutputDelay;
-    bool        isModelRunning;
+    ModelState  modelState;
 
     // Constructor for easy initialization
     ModelInfo() = default;
 
-    ModelInfo(const bool modelRunning) : isModelRunning(modelRunning) {}
+    ModelInfo(const ModelState modelState) : modelState(modelState) {}
 
     ModelInfo(const int sr, const int w, const int md, const int nf, const int od)
         : modelSampleRate(std::to_string(sr) + " Hz"), modelWindowLength(std::to_string(w) + " ms"),
           modelDelay(std::to_string(md) + " ms"), optimalNumFrames(std::to_string(nf)),
           currentOutputDelay(std::to_string(od) + " ms")
     {
-        isModelRunning = true;
+        modelState = ModelState::Initilized;
     }
 };
 
@@ -59,7 +67,9 @@ class AicModelInfoBox : public juce::Component
 
         g.setColour(aic::ui::BLACK_100);
 
-        if (modelInfo.isModelRunning)
+        switch (modelInfo.modelState)
+        {
+        case Initilized:
         {
             // Create a vector of label-value pairs for easy iteration
             std::vector<std::pair<std::string, std::string>> infoLines = {
@@ -82,15 +92,28 @@ class AicModelInfoBox : public juce::Component
                 if (i < infoLines.size() - 1)
                     bounds.removeFromTop(6);
             }
+            break;
         }
-        else
+        case WrongAudioSettings:
         {
             g.setFont(24.f);
-            g.drawText("Unsupported Audio Settings!", bounds, juce::Justification::centred);
+            g.drawText("Unsupported audio settings...", bounds, juce::Justification::centred);
+        }
+        break;
+        case LicenseInactive:
+        {
+            g.setFont(24.f);
+            g.drawText("License inactive, click the button top right!", bounds,
+                       juce::Justification::centred);
+        }
+        break;
         }
     }
 
+    void setLicenseInvalid();
+
   private:
     ModelInfo modelInfo;
+    bool      licenseInvalid;
 };
 } // namespace aic::ui
