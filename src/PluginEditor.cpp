@@ -51,7 +51,7 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize(454, 452);
+    setSize(454, 468);
 }
 
 AicDemoAudioProcessorEditor::~AicDemoAudioProcessorEditor()
@@ -64,10 +64,18 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
 {
     g.fillAll(aic::ui::BLACK_0);
 
-    g.setColour(aic::ui::BLACK_70);
-
     auto bounds = getLocalBounds();
     bounds.reduce(35.f, 33.f);
+
+    juce::String licenseStatus =
+        processorRef.isLicenseValid() ? "License Active" : "License Invalid";
+
+    juce::Colour licenseColor =
+        processorRef.isLicenseValid() ? aic::ui::BLACK_70 : juce::Colours::red;
+
+    g.setColour(licenseColor);
+
+    g.drawText(licenseStatus, bounds.removeFromTop(16), juce::Justification::centredRight);
 
     g.setColour(aic::ui::BLACK_70);
     g.setFont(16.f);

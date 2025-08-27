@@ -18,15 +18,15 @@ struct SliderLnF : juce::LookAndFeel_V4
     {
         auto bounds = juce::Rectangle<float>((float) x, (float) y, (float) width, (float) height);
 
-        auto tooltipWidth = 34.f;
-        auto bubbleHeight = 18.f;
-        auto arrowHeight  = 4.f;
+        auto tooltipWidth  = 34.f;
+        auto bubbleHeight  = 18.f;
+        auto arrowHeight   = 4.f;
         auto tooltipHeight = bubbleHeight + arrowHeight;
 
         // Tooltip and thumb will otherwise move outside of the window
-        auto sliderStart =  tooltipWidth / 2.f;
-        auto sliderEnd =  width - tooltipWidth / 2.f;
-        auto mappedSliderPos = juce::jmap(sliderPos, 0.f, (float)width, sliderStart, sliderEnd);
+        auto sliderStart     = tooltipWidth / 2.f;
+        auto sliderEnd       = width - tooltipWidth / 2.f;
+        auto mappedSliderPos = juce::jmap(sliderPos, 0.f, (float) width, sliderStart, sliderEnd);
 
         // Always make space for the tooltip
         auto tooltipBounds = bounds.removeFromTop(tooltipHeight);
@@ -34,7 +34,9 @@ struct SliderLnF : juce::LookAndFeel_V4
         // Draw Tooltip
         if (slider.isMouseOverOrDragging())
         {
-            auto bubbleBounds = tooltipBounds.removeFromTop(bubbleHeight).removeFromLeft(tooltipWidth).withCentre({mappedSliderPos, bubbleHeight / 2.f});
+            auto bubbleBounds = tooltipBounds.removeFromTop(bubbleHeight)
+                                    .removeFromLeft(tooltipWidth)
+                                    .withCentre({mappedSliderPos, bubbleHeight / 2.f});
 
             // Tooltip Background
             g.setColour(aic::ui::BLUE_10);
@@ -51,8 +53,8 @@ struct SliderLnF : juce::LookAndFeel_V4
             auto arrowY = bubbleBounds.getBottom();
 
             juce::Path arrow;
-            arrow.addTriangle(arrowX - arrowHeight, arrowY, arrowX + arrowHeight,
-                                 arrowY, arrowX, arrowY + arrowHeight);
+            arrow.addTriangle(arrowX - arrowHeight, arrowY, arrowX + arrowHeight, arrowY, arrowX,
+                              arrowY + arrowHeight);
 
             g.setColour(aic::ui::BLUE_10);
             g.fillPath(arrow);
@@ -73,7 +75,8 @@ struct SliderLnF : juce::LookAndFeel_V4
         g.fillRoundedRectangle(valuePathBounds, valuePathBounds.getHeight() / 2.f);
 
         // Thumb
-        auto sliderThumbBounds = sliderBounds.removeFromLeft(sliderThumbWidth).withCentre({mappedSliderPos, sliderBounds.getCentreY()});
+        auto sliderThumbBounds = sliderBounds.removeFromLeft(sliderThumbWidth)
+                                     .withCentre({mappedSliderPos, sliderBounds.getCentreY()});
         g.setColour(aic::ui::BLUE_50);
         g.fillEllipse(sliderThumbBounds);
         g.setColour(aic::ui::BLACK_0);
@@ -83,8 +86,10 @@ struct SliderLnF : juce::LookAndFeel_V4
         g.setColour(aic::ui::BLACK_60);
         g.setFont(14.f);
         auto labelBounds = bounds.removeFromLeft(10.f);
-        g.drawText("0", labelBounds.withCentre({sliderStart, bounds.getCentreY()}), juce::Justification::centredTop);
-        g.drawText("1", bounds.withCentre({sliderEnd, bounds.getCentreY()}), juce::Justification::centredTop);
+        g.drawText("0", labelBounds.withCentre({sliderStart, bounds.getCentreY()}),
+                   juce::Justification::centredTop);
+        g.drawText("1", bounds.withCentre({sliderEnd, bounds.getCentreY()}),
+                   juce::Justification::centredTop);
     }
 
     auto getSliderLayout(juce::Slider& slider) -> juce::Slider::SliderLayout override

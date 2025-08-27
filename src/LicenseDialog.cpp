@@ -210,7 +210,10 @@ void LicenseDialog::setupComponents()
     m_licenseKeyEditor.setCaretVisible(true);
     m_licenseKeyEditor.setPopupMenuEnabled(true);
     m_licenseKeyEditor.setJustification(juce::Justification::centredLeft);
-    m_licenseKeyEditor.setInputFilter(new juce::TextEditor::LengthAndCharacterRestriction(0, "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"), true);
+    m_licenseKeyEditor.setInputFilter(new juce::TextEditor::LengthAndCharacterRestriction(
+                                          0, "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq"
+                                             "rstuvwxyz!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"),
+                                      true);
     m_licenseKeyEditor.setFont(
         juce::Font(juce::Font::getDefaultSansSerifFontName(), 16.0f, juce::Font::plain));
     m_licenseKeyEditor.setColour(juce::TextEditor::backgroundColourId, aic::ui::BLACK_0);
@@ -231,7 +234,7 @@ void LicenseDialog::setupComponents()
     addAndMakeVisible(m_okButton);
 
     // Set dialog size
-    setSize(415, 320);
+    setSize(415, 288);
 }
 
 void LicenseDialog::paint(juce::Graphics& g)
