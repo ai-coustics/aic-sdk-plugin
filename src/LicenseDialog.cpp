@@ -228,9 +228,16 @@ void LicenseDialog::setupComponents()
     // OK button
     m_okButton.setButtonText("Activate License");
     m_okButton.setColour(juce::TextButton::buttonColourId, aic::ui::BLACK_100);
-    m_okButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
-    m_okButton.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
+    m_okButton.setColour(juce::TextButton::textColourOffId, aic::ui::BLACK_0);
+    m_okButton.setColour(juce::TextButton::textColourOnId, aic::ui::BLACK_0);
     m_okButton.addListener(this);
+    addAndMakeVisible(m_okButton);
+
+    m_cancelButton.setButtonText("Cancel");
+    m_cancelButton.setColour(juce::TextButton::buttonColourId, aic::ui::BLACK_0);
+    m_cancelButton.setColour(juce::TextButton::textColourOffId, aic::ui::BLACK_70);
+    m_cancelButton.setColour(juce::TextButton::textColourOnId, aic::ui::BLACK_70);
+    m_cancelButton.addListener(this);
     addAndMakeVisible(m_okButton);
 
     // Set dialog size
@@ -271,7 +278,10 @@ void LicenseDialog::resized()
     area.removeFromTop(32); // spacing
 
     // Buttons
-    m_okButton.setBounds(area.removeFromTop(40).removeFromRight(147));
+    auto buttonArea = area.removeFromTop(40);
+    m_okButton.setBounds(buttonArea.removeFromRight(147));
+    buttonArea.removeFromRight(24);
+    m_okButton.setBounds(buttonArea.removeFromRight(81));
 }
 
 void LicenseDialog::buttonClicked(juce::Button* button)

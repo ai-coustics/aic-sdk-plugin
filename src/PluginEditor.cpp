@@ -21,6 +21,16 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
 
     getLookAndFeel().setDefaultSansSerifTypeface(getFont());
 
+    // Set up license button
+    addAndMakeVisible(m_licenseButton);
+    m_licenseButton.onClick = [this]()
+    {
+        showModalOverlay();
+        m_licenseDialog.showDialog(this);
+        m_licenseDialog.toFront(false);
+    };
+    updateLicenseButton();
+
     addAndMakeVisible(enhancementSlider);
 
     addAndMakeVisible(modelSelector);
@@ -67,15 +77,8 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
     auto bounds = getLocalBounds();
     bounds.reduce(35.f, 33.f);
 
-    juce::String licenseStatus =
-        processorRef.isLicenseValid() ? "License Active" : "License Invalid";
-
-    juce::Colour licenseColor =
-        processorRef.isLicenseValid() ? aic::ui::BLACK_70 : juce::Colours::red;
-
-    g.setColour(licenseColor);
-
-    g.drawText(licenseStatus, bounds.removeFromTop(16), juce::Justification::centredRight);
+    // Position license button
+    m_licenseButton.setBounds(bounds.removeFromTop(16).removeFromRight(120));
 
     g.setColour(aic::ui::BLACK_70);
     g.setFont(16.f);
@@ -120,6 +123,7 @@ void AicDemoAudioProcessorEditor::timerCallback()
     if (lastLicenseState != currentLicenseState)
     {
         lastLicenseState = currentLicenseState;
+        updateLicenseButton(); // Update button text and color
         repaint(); // Repaint to update license status display
 
         // If license became invalid, show the dialog
@@ -188,6 +192,9 @@ bool AicDemoAudioProcessorEditor::handleLicenseValidation(const juce::String& li
                 // Force update the model info since we now have a valid license
                 updateModelInfo();
 
+                // Update license button text and color
+                updateLicenseButton();
+
                 // Trigger a repaint to update the license status display
                 repaint();
 
@@ -197,4 +204,18 @@ bool AicDemoAudioProcessorEditor::handleLicenseValidation(const juce::String& li
     }
 
     return false; // License invalid or save failed, keep dialog open
+}
+
+void AicDemoAudioProcessorEditor::updateLicenseButton()
+{
+    juce::String buttonText = processorRef.isLicenseValid() ? "License Active" : "License Invalid";
+    juce::Colour buttonColor = processorRef.isLicenseValid() ? aic::ui::BLACK_70 : juce::Colours::red;
+
+    m_licenseButton.setButtonText(buttonText);
+    m_licenseButton.setColour(juce::TextButton::textColourOffId, buttonColor);
+    m_licenseButton.setColour(juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
+    m_licenseButton.setColour(juce::TextButton::buttonOnColourId, juce::Colours::transparentBlack);
+
+    // Make it look like a clickable text link
+    m_licenseButton.setMouseCursor(juce::MouseCursor::PointingHandCursor);
 }

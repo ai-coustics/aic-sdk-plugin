@@ -42,6 +42,7 @@ class AicDemoAudioProcessorEditor final : public juce::AudioProcessorEditor, pub
 
     aic::ui::LicenseDialog m_licenseDialog;
 
+    juce::TextButton m_licenseButton;
     std::unique_ptr<juce::Drawable> m_logo;
 
     // Modal overlay component for dimming background when dialog is shown
@@ -57,6 +58,7 @@ class AicDemoAudioProcessorEditor final : public juce::AudioProcessorEditor, pub
     std::unique_ptr<ModalOverlay> m_modalOverlay;
 
     void updateModelInfo();
+    void updateLicenseButton();
 
     /**
      * @brief Shows a modal overlay that darkens the background.
