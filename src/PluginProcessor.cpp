@@ -166,6 +166,9 @@ void AicDemoAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         // Only create model if we have a valid license
         if (isLicenseValid())
         {
+            /// This is not real-time safe and will lead to clicks.
+            /// Though we want to show the RAM usage of each model and they are not meant to be changed in real-time.
+            /// When loading all models prior, the RAM usage is way higher than necessary.
             createModel(m_activeModelIndex);
             initializeModel();
         }
