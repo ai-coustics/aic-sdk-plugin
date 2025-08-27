@@ -167,8 +167,9 @@ void AicDemoAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         if (isLicenseValid())
         {
             /// This is not real-time safe and will lead to clicks.
-            /// Though we want to show the RAM usage of each model and they are not meant to be changed in real-time.
-            /// When loading all models prior, the RAM usage is way higher than necessary.
+            /// Though we want to show the RAM usage of each model and they are not meant to be
+            /// changed in real-time. When loading all models prior, the RAM usage is way higher
+            /// than necessary.
             createModel(m_activeModelIndex);
             initializeModel();
         }
@@ -251,7 +252,12 @@ bool AicDemoAudioProcessor::saveLicenseKey(const juce::String& licenseKey)
         }
     }
 
-    // Write the license key to file
+    // Write the license key to file (delete existing file first to ensure overwrite)
+    if (licenseFile.exists())
+    {
+        licenseFile.deleteFile();
+    }
+
     juce::FileOutputStream stream(licenseFile);
     if (stream.openedOk())
     {
