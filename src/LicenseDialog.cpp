@@ -266,7 +266,7 @@ void LicenseDialog::setupComponents()
     addAndMakeVisible(m_cancelButton);
 
     // Set dialog size
-    setSize(415, 288);
+    setSize(415, 298);
 }
 
 void LicenseDialog::paint(juce::Graphics& g)
@@ -293,7 +293,7 @@ void LicenseDialog::resized()
     area.removeFromTop(8); // spacing
 
     // Instruction text
-    m_instructionLabel.setBounds(area.removeFromTop(40));
+    m_instructionLabel.setBounds(area.removeFromTop(50));
     area.removeFromTop(24); // spacing
 
     // License key input
@@ -398,6 +398,9 @@ void LicenseDialog::showDialog(juce::Component* parentComponent)
 
 void LicenseDialog::closeDialog()
 {
+    // Clear the license key input field
+    m_licenseKeyEditor.clear();
+
     if (auto* parent = getParentComponent())
     {
         parent->removeChildComponent(this);
