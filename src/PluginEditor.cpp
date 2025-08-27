@@ -14,7 +14,7 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
       modelSelectorAttachment(p.state, "model", modelSelector),
       enhancementAttachment(p.state, "enhancement", enhancementSlider),
       m_licenseDialog([this](const juce::String& licenseKey)
-                      { return handleLicenseValidation(licenseKey); })
+                      { return handleLicenseValidation(licenseKey); }, processorRef.isLicenseValid())
 {
     // Set up close callback for license dialog to hide overlay when closed
     m_licenseDialog.setCloseCallback([this]() { hideModalOverlay(); });
@@ -198,11 +198,13 @@ bool AicDemoAudioProcessorEditor::handleLicenseValidation(const juce::String& li
                 // Trigger a repaint to update the license status display
                 repaint();
 
+                m_licenseDialog.setLicenseActive(true);
+
                 return true; // License accepted, close dialog
             }
         }
     }
-
+    m_licenseDialog.setLicenseActive(false);
     return false; // License invalid or save failed, keep dialog open
 }
 

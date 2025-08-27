@@ -149,8 +149,9 @@ class LicenseDialog : public juce::Component, public juce::Button::Listener
      * @brief Constructs a new License Dialog.
      *
      * @param callback Function to call when the user submits a license key
+     * @param isLicenseActive Whether a license is currently active (changes dialog text)
      */
-    explicit LicenseDialog(LicenseCallback callback);
+    explicit LicenseDialog(LicenseCallback callback, bool isLicenseActive = false);
 
     /**
      * @brief Destructor.
@@ -197,6 +198,10 @@ class LicenseDialog : public juce::Component, public juce::Button::Listener
      */
     void focusLicenseInput();
 
+    void setLicenseActive(bool isActive) {
+        m_isLicenseActive = isActive;
+    }
+
   private:
     //==============================================================================
     // UI Components
@@ -221,6 +226,9 @@ class LicenseDialog : public juce::Component, public juce::Button::Listener
 
     // Error dialog for custom error messages
     std::unique_ptr<ErrorDialog> m_errorDialog;
+
+    // Whether a license is currently active
+    bool m_isLicenseActive = false;
 
     /**
      * @brief Handles the OK button click or Enter key press.

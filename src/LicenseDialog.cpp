@@ -166,7 +166,8 @@ void ErrorDialog::closeDialog()
 //==============================================================================
 // LicenseDialog Implementation
 
-LicenseDialog::LicenseDialog(LicenseCallback callback) : m_licenseCallback(std::move(callback))
+LicenseDialog::LicenseDialog(LicenseCallback callback, bool isLicenseActive)
+    : m_licenseCallback(std::move(callback)), m_isLicenseActive(isLicenseActive)
 {
     setupComponents();
 }
@@ -178,7 +179,14 @@ void LicenseDialog::setupComponents()
     addAndMakeVisible(m_alertTriangle.get());
 
     // Title label
-    m_titleLabel.setText("License Required", juce::dontSendNotification);
+    if (m_isLicenseActive)
+    {
+        m_titleLabel.setText("Update License Key", juce::dontSendNotification);
+    }
+    else
+    {
+        m_titleLabel.setText("License Required", juce::dontSendNotification);
+    }
     m_titleLabel.setFont(
         juce::Font(juce::Font::getDefaultSansSerifFontName(), 18.0f, juce::Font::plain));
     m_titleLabel.setJustificationType(juce::Justification::left);
@@ -186,9 +194,19 @@ void LicenseDialog::setupComponents()
     addAndMakeVisible(m_titleLabel);
 
     // Instruction label
-    m_instructionLabel.setText("Please enter your license key to continue using this "
-                               "plugin. To aquire a key contact: info@ai-coustics.com.",
-                               juce::dontSendNotification);
+    if (m_isLicenseActive)
+    {
+        m_instructionLabel.setText("Your current license is active. You can update to a "
+                                   "different license key if needed. To acquire a new key, "
+                                   "contact: info@ai-coustics.com",
+                                   juce::dontSendNotification);
+    }
+    else
+    {
+        m_instructionLabel.setText("Please enter your license key to continue using this "
+                                   "plugin. To acquire a key, contact: info@ai-coustics.com",
+                                   juce::dontSendNotification);
+    }
     m_instructionLabel.setFont(
         juce::Font(juce::Font::getDefaultSansSerifFontName(), 16.0f, juce::Font::plain));
     m_instructionLabel.setJustificationType(juce::Justification::left);
@@ -226,7 +244,14 @@ void LicenseDialog::setupComponents()
     addAndMakeVisible(m_licenseKeyEditor);
 
     // OK button
-    m_okButton.setButtonText("Activate License");
+    if (m_isLicenseActive)
+    {
+        m_okButton.setButtonText("Update License");
+    }
+    else
+    {
+        m_okButton.setButtonText("Activate License");
+    }
     m_okButton.setColour(juce::TextButton::buttonColourId, aic::ui::BLACK_100);
     m_okButton.setColour(juce::TextButton::textColourOffId, aic::ui::BLACK_0);
     m_okButton.setColour(juce::TextButton::textColourOnId, aic::ui::BLACK_0);
@@ -238,7 +263,7 @@ void LicenseDialog::setupComponents()
     m_cancelButton.setColour(juce::TextButton::textColourOffId, aic::ui::BLACK_70);
     m_cancelButton.setColour(juce::TextButton::textColourOnId, aic::ui::BLACK_70);
     m_cancelButton.addListener(this);
-    addAndMakeVisible(m_okButton);
+    addAndMakeVisible(m_cancelButton);
 
     // Set dialog size
     setSize(415, 288);
@@ -280,8 +305,8 @@ void LicenseDialog::resized()
     // Buttons
     auto buttonArea = area.removeFromTop(40);
     m_okButton.setBounds(buttonArea.removeFromRight(147));
-    buttonArea.removeFromRight(24);
-    m_okButton.setBounds(buttonArea.removeFromRight(81));
+    buttonArea.removeFromRight(8);
+    m_cancelButton.setBounds(buttonArea.removeFromRight(81));
 }
 
 void LicenseDialog::buttonClicked(juce::Button* button)
@@ -289,6 +314,10 @@ void LicenseDialog::buttonClicked(juce::Button* button)
     if (button == &m_okButton)
     {
         handleOkAction();
+    }
+    else if (button == &m_cancelButton)
+    {
+        handleCancelAction();
     }
 }
 
@@ -309,17 +338,20 @@ void LicenseDialog::handleOkAction()
 
     if (licenseKey.trim().isEmpty())
     {
+        m_isLicenseActive = false;
         showErrorDialog("Invalid License Key", "Please enter a license key.");
         return;
     }
 
     if (m_licenseCallback && m_licenseCallback(licenseKey))
     {
+        m_isLicenseActive = true;
         closeDialog();
     }
     else
     {
         showErrorDialog("Invalid License Key", "The license key you entered is not valid.");
+        m_isLicenseActive = false;
         m_licenseKeyEditor.selectAll();
         m_licenseKeyEditor.grabKeyboardFocus();
     }
