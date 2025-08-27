@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AicColours.h"
 #include <functional>
 #include <juce_gui_basics/juce_gui_basics.h>
 
@@ -7,6 +8,28 @@ namespace aic
 {
 namespace ui
 {
+
+struct TextEditorLnF : juce::LookAndFeel_V4
+{
+    void drawTextEditorOutline(juce::Graphics &g, int width, int height, juce::TextEditor &textEditor) override {
+        if (textEditor.hasKeyboardFocus (true) && ! textEditor.isReadOnly())
+        {
+            g.setColour (textEditor.findColour (juce::TextEditor::focusedOutlineColourId));
+            g.drawRoundedRectangle(0.f, 0.f, (float)width, (float)height, 8.f, 2.f);
+        }
+        else
+        {
+            g.setColour (textEditor.findColour (juce::TextEditor::outlineColourId));
+            g.drawRoundedRectangle(0.f, 0.f, (float)width, (float)height, 8.f, 2.f);
+        }
+    }
+
+    juce::CaretComponent* createCaretComponent (juce::Component* keyFocusOwner) override {
+        auto caret = new juce::CaretComponent (keyFocusOwner);
+        caret->setColour(juce::CaretComponent::ColourIds::caretColourId, aic::ui::BLACK_70);
+        return caret;
+    }
+};
 
 /**
  * @brief A simple error dialog component for displaying error messages.
@@ -173,6 +196,7 @@ class LicenseDialog : public juce::Component, public juce::Button::Listener
   private:
     //==============================================================================
     // UI Components
+    TextEditorLnF m_textEditorLnf;
     std::unique_ptr<juce::Drawable> m_alertTriangle;
 
     juce::Label      m_titleLabel;
