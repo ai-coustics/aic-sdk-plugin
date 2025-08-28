@@ -1,5 +1,8 @@
 # ai-coustics SDK Example Plugin
 
+[![Build and Release](https://github.com/ai-coustics/aic-sdk-plugin/actions/workflows/build-and-release.yml/badge.svg)](https://github.com/ai-coustics/aic-sdk-plugin/actions/workflows/build-and-release.yml)
+[![Test Build](https://github.com/ai-coustics/aic-sdk-plugin/actions/workflows/test-build.yml/badge.svg)](https://github.com/ai-coustics/aic-sdk-plugin/actions/workflows/test-build.yml)
+
 Experience our state-of-the-art speech enhancement technology firsthand with the ai-coustics Demo Plugin - a comprehensive audio plugin that provides instant access to all models in our Speech Enhancement SDK. Built for professional audio workflows, our SDK delivers cutting-edge real-time audio processing that dramatically improves speech clarity, reduces noise, and enhances intelligibility across any audio content.
 
 ## What is this Plugin?
@@ -12,7 +15,15 @@ The Demo Plugin provides:
 
 ## Installation
 
-Download the newest release [here](github.com/ai-coustics/aic-sdk-plugin/releases).
+Download the newest release [here](https://github.com/ai-coustics/aic-sdk-plugin/releases).
+
+### Quick Install
+
+The easiest way to install is using our automated installers included in each release:
+
+- **Linux**: Extract and run `./install.sh`
+- **macOS**: Extract and double-click `Install ai-coustics Plugins.app`
+- **Windows**: Extract and double-click `Install ai-coustics Plugins.exe`
 
 ### Automatic Installation
 
@@ -109,9 +120,34 @@ Need help? We're here to assist:
 
 Feel free to reach out to us if you encounter any issues or need further assistance.
 
+## Development
+
+### Building from Source
+
+The project uses CMake and automatically fetches dependencies (JUCE and ai-coustics SDK):
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+```
+
+Build artifacts will be in `build/AicSdkPlugin_artefacts/Release/`.
+
+For more details, see [DEVELOPMENT.md](DEVELOPMENT.md).
+
+### Automated Builds
+
+This project uses GitHub Actions for continuous integration:
+
+- **Releases**: Automatically built and published when tags are pushed
+- **Testing**: All pull requests are automatically tested on all platforms
+- **Manual**: Development builds can be triggered manually
+
+See [`.github/README.md`](.github/README.md) for workflow documentation.
+
 ## Licenses
 
-The source code in this repo is licensed under the Apache 2.0 wrapper, which does not include the AIC-SDK (downloaded at compile time) and the items in the assets folder, namely [aic-logo.svg](assets/aic_logo.svg) and [aic-font.otf](assets/aic_font.otf), wich are licensed under our [proprietary license](LICENSE.AIC-SDK). You are in no means allowed to copy or redistribute the logo and/or font in the assets folder. JUCE is licensed by the [proprietary JUCE license](https://juce.com/legal/juce-7-license/).
+The source code in this repo is licensed under the Apache 2.0 wrapper, which does not include the AIC-SDK (downloaded at compile time) and the items in the assets folder, namely [aic-logo.svg](assets/aic_logo.svg) and [aic-font.otf](assets/aic_font.otf), which are licensed under our [proprietary license](LICENSE.AIC-SDK). You are in no means allowed to copy or redistribute the logo and/or font in the assets folder. JUCE is licensed by the [proprietary JUCE license](https://juce.com/legal/juce-7-license/).
 
 ---
 
