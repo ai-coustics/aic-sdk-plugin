@@ -120,7 +120,7 @@ jobs:
           cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build plugin
-        run: cmake --build build -j
+        run: cmake --build build --config Release -j
 
       - name: Prepare Windows release package
         run: |
