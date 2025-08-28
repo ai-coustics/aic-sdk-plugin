@@ -5,10 +5,6 @@ on:
     branches: [main]
   workflow_dispatch:
 
-env:
-  CMAKE_BUILD_TYPE: Release
-  JUCE_BUILD_PARALLEL_JOBS: 4
-
 jobs:
   test-linux:
     runs-on: ubuntu-22.04
@@ -66,13 +62,10 @@ jobs:
 
       - name: Configure CMake
         run: |
-          cmake -B build \
-            -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} \
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11 \
-            -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build plugin
-        run: cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
+        run: cmake --build build -j
 
       - name: Test macOS install scripts
         run: |
@@ -103,11 +96,10 @@ jobs:
 
       - name: Configure CMake
         run: |
-          cmake -B build -G "Visual Studio 17 2022" -A x64 `
-            -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }}
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build plugin
-        run: cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
+        run: cmake --build build -j
 
       - name: Test Windows install scripts
         run: |

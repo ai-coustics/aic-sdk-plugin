@@ -41,7 +41,7 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=/usr/local
 
       - name: Build plugin
-        run: cmake --build build --config -j
+        run: cmake --build build -j
 
       - name: Prepare Linux release package
         run: |
@@ -120,7 +120,7 @@ jobs:
           cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build plugin
-        run: cmake --build build --config -j
+        run: cmake --build build -j
 
       - name: Prepare Windows release package
         run: |

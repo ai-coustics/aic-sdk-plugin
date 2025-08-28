@@ -15,10 +15,6 @@ on:
         default: false
         type: boolean
 
-env:
-  CMAKE_BUILD_TYPE: Release
-  JUCE_BUILD_PARALLEL_JOBS: 4
-
 jobs:
   test-linux-installer:
     runs-on: ubuntu-22.04
@@ -48,8 +44,8 @@ jobs:
 
       - name: Build plugin for testing
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }}
-          cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j
 
       - name: Test Linux installer script syntax
         run: |
@@ -94,8 +90,8 @@ jobs:
 
       - name: Build plugin for testing
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11 -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
-          cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release -j
 
       - name: Test macOS installer scripts syntax
         run: |
@@ -164,8 +160,8 @@ jobs:
 
       - name: Build plugin for testing
         run: |
-          cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }}
-          cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j
 
       - name: Test Windows installer scripts syntax
         run: |
