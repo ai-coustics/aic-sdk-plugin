@@ -22,8 +22,8 @@ ErrorDialog::ErrorDialog(const juce::String& title, const juce::String& message)
 
 void ErrorDialog::setupComponents()
 {
-    m_alertTriangle = juce::Drawable::createFromImageData(BinaryData::alert_svg,
-                                                          BinaryData::alert_svgSize);
+    m_alertTriangle =
+        juce::Drawable::createFromImageData(BinaryData::alert_svg, BinaryData::alert_svgSize);
     addAndMakeVisible(m_alertTriangle.get());
 
     // Title label
@@ -82,9 +82,9 @@ void ErrorDialog::resized()
 
     // Get actual text height and adjust if needed
     auto font       = m_messageLabel.getFont();
-    auto textWidth  = messageArea.getWidth();
+    auto textWidth  = static_cast<float>(messageArea.getWidth());
     auto textHeight = font.getStringWidth(m_messageLabel.getText()) / textWidth * font.getHeight();
-    if (textHeight > messageArea.getHeight())
+    if (textHeight > static_cast<float>(messageArea.getHeight()))
     {
         // Adjust dialog size if text is too long
         auto extraHeight = static_cast<int>(textHeight) - messageArea.getHeight();
@@ -121,18 +121,11 @@ void ErrorDialog::showDialog(juce::Component* parentComponent)
     if (parentComponent == nullptr)
         return;
 
-    // Get the top-level component (usually the plugin window)
-    auto* topLevel = parentComponent->getTopLevelComponent();
-    if (topLevel == nullptr)
-        topLevel = parentComponent;
-
-    // Center the dialog on screen coordinates
-    auto screenBounds = topLevel->getScreenBounds();
+    // Center the dialog within the parent component's bounds
+    // This avoids coordinate system conversion issues with scaled plugins
+    auto parentBounds = parentComponent->getLocalBounds();
     auto dialogBounds =
-        juce::Rectangle<int>(getWidth(), getHeight()).withCentre(screenBounds.getCentre());
-
-    // Convert to local coordinates of the parent
-    dialogBounds = parentComponent->getLocalArea(nullptr, dialogBounds);
+        juce::Rectangle<int>(getWidth(), getHeight()).withCentre(parentBounds.getCentre());
     setBounds(dialogBounds);
 
     // Add as child component
@@ -174,8 +167,8 @@ LicenseDialog::LicenseDialog(LicenseCallback callback, bool isLicenseActive)
 
 void LicenseDialog::setupComponents()
 {
-    m_alertTriangle = juce::Drawable::createFromImageData(BinaryData::alert_svg,
-                                                          BinaryData::alert_svgSize);
+    m_alertTriangle =
+        juce::Drawable::createFromImageData(BinaryData::alert_svg, BinaryData::alert_svgSize);
     addAndMakeVisible(m_alertTriangle.get());
 
     // Title label
@@ -372,18 +365,11 @@ void LicenseDialog::showDialog(juce::Component* parentComponent)
     if (parentComponent == nullptr)
         return;
 
-    // Get the top-level component (usually the plugin window)
-    auto* topLevel = parentComponent->getTopLevelComponent();
-    if (topLevel == nullptr)
-        topLevel = parentComponent;
-
-    // Center the dialog on screen coordinates
-    auto screenBounds = topLevel->getScreenBounds();
+    // Center the dialog within the parent component's bounds
+    // This avoids coordinate system conversion issues with scaled plugins
+    auto parentBounds = parentComponent->getLocalBounds();
     auto dialogBounds =
-        juce::Rectangle<int>(getWidth(), getHeight()).withCentre(screenBounds.getCentre());
-
-    // Convert to local coordinates of the parent
-    dialogBounds = parentComponent->getLocalArea(nullptr, dialogBounds);
+        juce::Rectangle<int>(getWidth(), getHeight()).withCentre(parentBounds.getCentre());
     setBounds(dialogBounds);
 
     // Add as child component
