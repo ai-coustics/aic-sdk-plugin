@@ -27,7 +27,7 @@ struct ModelInfo
     // Constructor for easy initialization
     ModelInfo() = default;
 
-    ModelInfo(const ModelState modelState) : modelState(modelState) {}
+    ModelInfo(const ModelState state) : modelState(state) {}
 
     ModelInfo(const int sr, const int w, const int md, const int nf, const int od)
         : modelSampleRate(std::to_string(sr) + " Hz"), modelWindowLength(std::to_string(w) + " ms"),
@@ -96,14 +96,14 @@ class AicModelInfoBox : public juce::Component
         }
         case WrongAudioSettings:
         {
-            g.setFont(24.f);
+            g.setFont(16.f);
             g.drawText("Unsupported audio settings...", bounds, juce::Justification::centred);
         }
         break;
         case LicenseInactive:
         {
-            g.setFont(24.f);
-            g.drawText("License inactive, click the button top right!", bounds,
+            g.setFont(16.f);
+            g.drawText("No license found, open the dialog at the top right...", bounds,
                        juce::Justification::centred);
         }
         break;

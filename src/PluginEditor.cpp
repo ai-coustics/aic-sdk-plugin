@@ -38,9 +38,12 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
     modelSelector.addItemList(processorRef.getModelChoices(), 1);
     modelSelector.setSelectedItemIndex(
         static_cast<int>(processorRef.state.getRawParameterValue("model")->load()));
+
+    updateModelInfo();
     addAndMakeVisible(modelInfoBox);
 
-    m_logo = juce::Drawable::createFromImageData(BinaryData::aic_logo_svg, BinaryData::aic_logo_svgSize);
+    m_logo =
+        juce::Drawable::createFromImageData(BinaryData::aic_logo_svg, BinaryData::aic_logo_svgSize);
     addAndMakeVisible(m_logo.get());
 
     // Check if license is valid and show dialog if needed
