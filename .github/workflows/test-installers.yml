@@ -3,14 +3,14 @@ name: Test Installers
 on:
   push:
     paths:
-      - 'release/**'
+      - "release/**"
   pull_request:
     paths:
-      - 'release/**'
+      - "release/**"
   workflow_dispatch:
     inputs:
       test_install:
-        description: 'Actually test installation (requires sudo)'
+        description: "Actually test installation (requires sudo)"
         required: false
         default: false
         type: boolean
@@ -23,263 +23,263 @@ jobs:
   test-linux-installer:
     runs-on: ubuntu-22.04
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Install Linux dependencies for building
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          libasound2-dev \
-          libjack-jackd2-dev \
-          ladspa-sdk \
-          libcurl4-openssl-dev \
-          libfreetype6-dev \
-          libx11-dev \
-          libxcomposite-dev \
-          libxcursor-dev \
-          libxext-dev \
-          libxinerama-dev \
-          libxrandr-dev \
-          libxrender-dev \
-          libwebkit2gtk-4.0-dev \
-          libglu1-mesa-dev \
-          mesa-common-dev
+      - name: Install Linux dependencies for building
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev \
+            libjack-jackd2-dev \
+            ladspa-sdk \
+            libcurl4-openssl-dev \
+            libfreetype6-dev \
+            libx11-dev \
+            libxcomposite-dev \
+            libxcursor-dev \
+            libxext-dev \
+            libxinerama-dev \
+            libxrandr-dev \
+            libxrender-dev \
+            libwebkit2gtk-4.0-dev \
+            libglu1-mesa-dev \
+            mesa-common-dev
 
-    - name: Build plugin for testing
-      run: |
-        cmake -B build -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }}
-        cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
+      - name: Build plugin for testing
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }}
+          cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
 
-    - name: Test Linux installer script syntax
-      run: |
-        cd release/linux
-        bash -n install.sh
-        echo "✓ Linux installer script syntax is valid"
+      - name: Test Linux installer script syntax
+        run: |
+          cd release/linux
+          bash -n install.sh
+          echo "✓ Linux installer script syntax is valid"
 
-    - name: Prepare test environment
-      run: |
-        mkdir -p test-install/linux
-        cp -r build/AicSdkPlugin_artefacts/Release/VST3 test-install/linux/
-        cp release/linux/install.sh test-install/linux/
-        chmod +x test-install/linux/install.sh
+      - name: Prepare test environment
+        run: |
+          mkdir -p test-install/linux
+          cp -r build/AicSdkPlugin_artefacts/Release/VST3 test-install/linux/
+          cp release/linux/install.sh test-install/linux/
+          chmod +x test-install/linux/install.sh
 
-    - name: Test installer dry run
-      run: |
-        cd test-install/linux
-        # Modify script to do a dry run (no actual copying)
-        sed 's/cp -r/echo "Would copy:"/g' install.sh > install_dryrun.sh
-        sed -i 's/mkdir -p/echo "Would create directory:"/g' install_dryrun.sh
-        chmod +x install_dryrun.sh
-        ./install_dryrun.sh
+      - name: Test installer dry run
+        run: |
+          cd test-install/linux
+          # Modify script to do a dry run (no actual copying)
+          sed 's/cp -r/echo "Would copy:"/g' install.sh > install_dryrun.sh
+          sed -i 's/mkdir -p/echo "Would create directory:"/g' install_dryrun.sh
+          chmod +x install_dryrun.sh
+          ./install_dryrun.sh
 
-    - name: Test actual installation (if requested)
-      if: ${{ github.event.inputs.test_install == 'true' }}
-      run: |
-        cd test-install/linux
-        # Create a temporary VST3 directory for testing
-        mkdir -p ~/test_vst3
-        # Modify the script to install to test location
-        sed "s|\$HOME/.vst3|$HOME/test_vst3|g" install.sh > install_test.sh
-        chmod +x install_test.sh
-        ./install_test.sh
-        # Verify installation
-        test -d ~/test_vst3/ai-coustics\ Demo.vst3 && echo "✓ Test installation successful"
+      - name: Test actual installation (if requested)
+        if: ${{ github.event.inputs.test_install == 'true' }}
+        run: |
+          cd test-install/linux
+          # Create a temporary VST3 directory for testing
+          mkdir -p ~/test_vst3
+          # Modify the script to install to test location
+          sed "s|\$HOME/.vst3|$HOME/test_vst3|g" install.sh > install_test.sh
+          chmod +x install_test.sh
+          ./install_test.sh
+          # Verify installation
+          test -d ~/test_vst3/ai-coustics\ Demo.vst3 && echo "✓ Test installation successful"
 
   test-macos-installer:
     runs-on: macos-13
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Build plugin for testing
-      run: |
-        cmake -B build -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11 -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
-        cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
+      - name: Build plugin for testing
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11 -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+          cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
 
-    - name: Test macOS installer scripts syntax
-      run: |
-        cd release/macos
-        bash -n install.sh
-        bash -n create_app_installer.sh
-        echo "✓ macOS installer scripts syntax is valid"
+      - name: Test macOS installer scripts syntax
+        run: |
+          cd release/macos
+          bash -n install.sh
+          bash -n create_app_installer.sh
+          echo "✓ macOS installer scripts syntax is valid"
 
-    - name: Test .command files
-      run: |
-        cd release/macos
-        # Check if .command files are executable and have valid syntax
-        test -x install.command && echo "✓ install.command is executable"
-        test -x install_with_gui.command && echo "✓ install_with_gui.command is executable"
-        bash -n install.command
-        bash -n install_with_gui.command
+      - name: Test .command files
+        run: |
+          cd release/macos
+          # Check if .command files are executable and have valid syntax
+          test -x install.command && echo "✓ install.command is executable"
+          test -x install_with_gui.command && echo "✓ install_with_gui.command is executable"
+          bash -n install.command
+          bash -n install_with_gui.command
 
-    - name: Prepare test environment
-      run: |
-        mkdir -p test-install/macos
-        cp -r build/AicSdkPlugin_artefacts/Release/VST3 test-install/macos/
-        cp -r build/AicSdkPlugin_artefacts/Release/AU test-install/macos/
-        cp -r build/AicSdkPlugin_artefacts/Release/Standalone test-install/macos/
-        cp release/macos/*.sh test-install/macos/
-        cp release/macos/*.command test-install/macos/
-        chmod +x test-install/macos/*.sh test-install/macos/*.command
+      - name: Prepare test environment
+        run: |
+          mkdir -p test-install/macos
+          cp -r build/AicSdkPlugin_artefacts/Release/VST3 test-install/macos/
+          cp -r build/AicSdkPlugin_artefacts/Release/AU test-install/macos/
+          cp -r build/AicSdkPlugin_artefacts/Release/Standalone test-install/macos/
+          cp release/macos/*.sh test-install/macos/
+          cp release/macos/*.command test-install/macos/
+          chmod +x test-install/macos/*.sh test-install/macos/*.command
 
-    - name: Test app installer creation
-      run: |
-        cd test-install/macos
-        ./create_app_installer.sh
-        test -d "Install ai-coustics Plugins.app" && echo "✓ macOS app installer created successfully"
+      - name: Test app installer creation
+        run: |
+          cd test-install/macos
+          ./create_app_installer.sh
+          test -d "Install ai-coustics Plugins.app" && echo "✓ macOS app installer created successfully"
 
-    - name: Test installer dry run
-      run: |
-        cd test-install/macos
-        # Create dry run version
-        sed 's/osascript -e.*cp -r/echo "Would copy:"/g' install.sh > install_dryrun.sh
-        sed -i 's/mkdir -p/echo "Would create directory:"/g' install_dryrun.sh
-        chmod +x install_dryrun.sh
-        ./install_dryrun.sh
+      - name: Test installer dry run
+        run: |
+          cd test-install/macos
+          # Create dry run version
+          sed 's/osascript -e.*cp -r/echo "Would copy:"/g' install.sh > install_dryrun.sh
+          sed -i 's/mkdir -p/echo "Would create directory:"/g' install_dryrun.sh
+          chmod +x install_dryrun.sh
+          ./install_dryrun.sh
 
-    - name: Test actual installation (if requested)
-      if: ${{ github.event.inputs.test_install == 'true' }}
-      run: |
-        cd test-install/macos
-        # Create test directories
-        mkdir -p ~/test_vst3 ~/test_au ~/test_applications
-        # Modify script for test installation
-        sed "s|/Library/Audio/Plug-Ins/VST3|$HOME/test_vst3|g" install.sh > install_test.sh
-        sed -i "s|/Library/Audio/Plug-Ins/Components|$HOME/test_au|g" install_test.sh
-        sed -i "s|/Applications|$HOME/test_applications|g" install_test.sh
-        sed -i 's/osascript.*with administrator privileges/bash -c/g' install_test.sh
-        chmod +x install_test.sh
-        ./install_test.sh
-        # Verify installation
-        test -d ~/test_vst3/ai-coustics\ Demo.vst3 && echo "✓ VST3 test installation successful"
-        test -d ~/test_au/ai-coustics\ Demo.component && echo "✓ AU test installation successful"
-        test -d ~/test_applications/ai-coustics\ Demo.app && echo "✓ Standalone test installation successful"
+      - name: Test actual installation (if requested)
+        if: ${{ github.event.inputs.test_install == 'true' }}
+        run: |
+          cd test-install/macos
+          # Create test directories
+          mkdir -p ~/test_vst3 ~/test_au ~/test_applications
+          # Modify script for test installation
+          sed "s|/Library/Audio/Plug-Ins/VST3|$HOME/test_vst3|g" install.sh > install_test.sh
+          sed -i "s|/Library/Audio/Plug-Ins/Components|$HOME/test_au|g" install_test.sh
+          sed -i "s|/Applications|$HOME/test_applications|g" install_test.sh
+          sed -i 's/osascript.*with administrator privileges/bash -c/g' install_test.sh
+          chmod +x install_test.sh
+          ./install_test.sh
+          # Verify installation
+          test -d ~/test_vst3/ai-coustics\ Demo.vst3 && echo "✓ VST3 test installation successful"
+          test -d ~/test_au/ai-coustics\ Demo.component && echo "✓ AU test installation successful"
+          test -d ~/test_applications/ai-coustics\ Demo.app && echo "✓ Standalone test installation successful"
 
   test-windows-installer:
     runs-on: windows-2022
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Build plugin for testing
-      run: |
-        cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }}
-        cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
+      - name: Build plugin for testing
+        run: |
+          cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }}
+          cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
 
-    - name: Test Windows installer scripts syntax
-      run: |
-        cd release\windows
-        # Test PowerShell scripts
-        Get-Command .\install.ps1 -Syntax
-        Get-Command .\install_gui.ps1 -Syntax
-        Get-Command .\create_exe_installer.ps1 -Syntax
-        Write-Host "✓ PowerShell scripts syntax is valid"
+      - name: Test Windows installer scripts syntax
+        run: |
+          cd release\windows
+          # Test PowerShell scripts
+          Get-Command .\install.ps1 -Syntax
+          Get-Command .\install_gui.ps1 -Syntax
+          Get-Command .\create_exe_installer.ps1 -Syntax
+          Write-Host "✓ PowerShell scripts syntax is valid"
 
-    - name: Test batch file
-      run: |
-        cd release\windows
-        # Test batch file by attempting a dry run
-        cmd /c "echo Testing batch file syntax && call install.bat /? >nul 2>&1 && echo ✓ Batch file syntax is valid || echo ✓ Batch file appears valid"
+      - name: Test batch file
+        run: |
+          cd release\windows
+          # Test batch file by attempting a dry run
+          cmd /c "echo Testing batch file syntax && call install.bat /? >nul 2>&1 && echo ✓ Batch file syntax is valid || echo ✓ Batch file appears valid"
 
-    - name: Prepare test environment
-      run: |
-        New-Item -ItemType Directory -Force -Path "test-install\windows"
-        Copy-Item -Recurse -Force "build\AicSdkPlugin_artefacts\${{ env.CMAKE_BUILD_TYPE }}\VST3" "test-install\windows\"
-        Copy-Item -Force "release\windows\*.ps1" "test-install\windows\"
-        Copy-Item -Force "release\windows\*.bat" "test-install\windows\"
+      - name: Prepare test environment
+        run: |
+          New-Item -ItemType Directory -Force -Path "test-install\windows"
+          Copy-Item -Recurse -Force "build\AicSdkPlugin_artefacts\${{ env.CMAKE_BUILD_TYPE }}\VST3" "test-install\windows\"
+          Copy-Item -Force "release\windows\*.ps1" "test-install\windows\"
+          Copy-Item -Force "release\windows\*.bat" "test-install\windows\"
 
-    - name: Test PowerShell installer dry run
-      run: |
-        cd test-install\windows
-        # Create a dry run version of the PowerShell script
-        $content = Get-Content .\install.ps1
-        $dryRunContent = $content -replace 'Copy-Item', 'Write-Host "Would copy:"' -replace 'New-Item', 'Write-Host "Would create:"'
-        $dryRunContent | Out-File -FilePath .\install_dryrun.ps1 -Encoding UTF8
-        .\install_dryrun.ps1
+      - name: Test PowerShell installer dry run
+        run: |
+          cd test-install\windows
+          # Create a dry run version of the PowerShell script
+          $content = Get-Content .\install.ps1
+          $dryRunContent = $content -replace 'Copy-Item', 'Write-Host "Would copy:"' -replace 'New-Item', 'Write-Host "Would create:"'
+          $dryRunContent | Out-File -FilePath .\install_dryrun.ps1 -Encoding UTF8
+          .\install_dryrun.ps1
 
-    - name: Test exe installer creation
-      run: |
-        cd test-install\windows
-        Install-Module -Name ps2exe -Force -AllowClobber
-        .\create_exe_installer.ps1
-        if (Test-Path "Install ai-coustics Plugins.exe") {
-            Write-Host "✓ Windows executable installer created successfully"
-            # Get file info
-            Get-ItemProperty "Install ai-coustics Plugins.exe" | Select-Object Name, Length, CreationTime
-        } else {
-            Write-Host "✗ Failed to create executable installer"
-            exit 1
-        }
+      - name: Test exe installer creation
+        run: |
+          cd test-install\windows
+          Install-Module -Name ps2exe -Force -AllowClobber
+          .\create_exe_installer.ps1
+          if (Test-Path "Install ai-coustics Plugins.exe") {
+              Write-Host "✓ Windows executable installer created successfully"
+              # Get file info
+              Get-ItemProperty "Install ai-coustics Plugins.exe" | Select-Object Name, Length, CreationTime
+          } else {
+              Write-Host "✗ Failed to create executable installer"
+              exit 1
+          }
 
-    - name: Test actual installation (if requested)
-      if: ${{ github.event.inputs.test_install == 'true' }}
-      run: |
-        cd test-install\windows
-        # Create test directory
-        $testDir = "$env:TEMP\test_vst3"
-        New-Item -ItemType Directory -Force -Path $testDir
-        # Modify script for test installation
-        $content = Get-Content .\install.ps1
-        $testContent = $content -replace '\$env:ProgramFiles\\Common Files\\VST3', $testDir
-        $testContent | Out-File -FilePath .\install_test.ps1 -Encoding UTF8
-        .\install_test.ps1
-        # Verify installation
-        if (Test-Path "$testDir\ai-coustics Demo.vst3") {
-            Write-Host "✓ Test installation successful"
-        } else {
-            Write-Host "✗ Test installation failed"
-            exit 1
-        }
+      - name: Test actual installation (if requested)
+        if: ${{ github.event.inputs.test_install == 'true' }}
+        run: |
+          cd test-install\windows
+          # Create test directory
+          $testDir = "$env:TEMP\test_vst3"
+          New-Item -ItemType Directory -Force -Path $testDir
+          # Modify script for test installation
+          $content = Get-Content .\install.ps1
+          $testContent = $content -replace '\$env:ProgramFiles\\Common Files\\VST3', $testDir
+          $testContent | Out-File -FilePath .\install_test.ps1 -Encoding UTF8
+          .\install_test.ps1
+          # Verify installation
+          if (Test-Path "$testDir\ai-coustics Demo.vst3") {
+              Write-Host "✓ Test installation successful"
+          } else {
+              Write-Host "✗ Test installation failed"
+              exit 1
+          }
 
   test-installer-consistency:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Check installer file consistency
-      run: |
-        echo "## Installer File Consistency Check" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-
-        # Check that all platforms have required installer files
-        platforms=("linux" "macos" "windows")
-
-        for platform in "${platforms[@]}"; do
-          echo "### $platform Platform" >> $GITHUB_STEP_SUMMARY
-          if [ -d "release/$platform" ]; then
-            echo "✓ Directory exists" >> $GITHUB_STEP_SUMMARY
-            find "release/$platform" -type f -name "*.sh" -o -name "*.ps1" -o -name "*.bat" -o -name "*.command" | while read file; do
-              echo "- $(basename "$file")" >> $GITHUB_STEP_SUMMARY
-            done
-          else
-            echo "✗ Directory missing" >> $GITHUB_STEP_SUMMARY
-          fi
+      - name: Check installer file consistency
+        run: |
+          echo "## Installer File Consistency Check" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-        done
 
-    - name: Check plugin name consistency
-      run: |
-        echo "### Plugin Name Consistency" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
+          # Check that all platforms have required installer files
+          platforms=("linux" "macos" "windows")
 
-        # Extract plugin name from CMakeLists.txt
-        PLUGIN_NAME=$(grep -oP '(?<=PRODUCT_NAME ")[^"]+' CMakeLists.txt || echo "ai-coustics Demo")
-        echo "Plugin name from CMakeLists.txt: $PLUGIN_NAME" >> $GITHUB_STEP_SUMMARY
+          for platform in "${platforms[@]}"; do
+            echo "### $platform Platform" >> $GITHUB_STEP_SUMMARY
+            if [ -d "release/$platform" ]; then
+              echo "✓ Directory exists" >> $GITHUB_STEP_SUMMARY
+              find "release/$platform" -type f -name "*.sh" -o -name "*.ps1" -o -name "*.bat" -o -name "*.command" | while read file; do
+                echo "- $(basename "$file")" >> $GITHUB_STEP_SUMMARY
+              done
+            else
+              echo "✗ Directory missing" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+          done
 
-        # Check if installer scripts use the same name
-        echo "Checking installer scripts for plugin name consistency..." >> $GITHUB_STEP_SUMMARY
-        grep -r "$PLUGIN_NAME" release/ | head -10 >> $GITHUB_STEP_SUMMARY || echo "No references found" >> $GITHUB_STEP_SUMMARY
+      - name: Check plugin name consistency
+        run: |
+          echo "### Plugin Name Consistency" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
-    - name: Validate README files
-      run: |
-        echo "### README File Validation" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
+          # Extract plugin name from CMakeLists.txt
+          PLUGIN_NAME=$(grep -oP '(?<=PRODUCT_NAME ")[^"]+' CMakeLists.txt || echo "ai-coustics Demo")
+          echo "Plugin name from CMakeLists.txt: $PLUGIN_NAME" >> $GITHUB_STEP_SUMMARY
 
-        for readme in release/*/README_INSTALLER.md; do
-          if [ -f "$readme" ]; then
-            platform=$(dirname "$readme" | sed 's|release/||')
-            echo "✓ $platform README exists" >> $GITHUB_STEP_SUMMARY
-          fi
-        done
+          # Check if installer scripts use the same name
+          echo "Checking installer scripts for plugin name consistency..." >> $GITHUB_STEP_SUMMARY
+          grep -r "$PLUGIN_NAME" release/ | head -10 >> $GITHUB_STEP_SUMMARY || echo "No references found" >> $GITHUB_STEP_SUMMARY
+
+      - name: Validate README files
+        run: |
+          echo "### README File Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          for readme in release/*/README_INSTALLER.md; do
+            if [ -f "$readme" ]; then
+              platform=$(dirname "$readme" | sed 's|release/||')
+              echo "✓ $platform README exists" >> $GITHUB_STEP_SUMMARY
+            fi
+          done

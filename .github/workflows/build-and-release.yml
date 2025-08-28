@@ -3,9 +3,9 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*'
+      - "*"
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
   workflow_dispatch:
 
 env:
@@ -16,208 +16,208 @@ jobs:
   build-linux:
     runs-on: ubuntu-22.04
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Install Linux dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          libasound2-dev \
-          libjack-jackd2-dev \
-          ladspa-sdk \
-          libcurl4-openssl-dev \
-          libfreetype6-dev \
-          libx11-dev \
-          libxcomposite-dev \
-          libxcursor-dev \
-          libxcursor-dev \
-          libxext-dev \
-          libxinerama-dev \
-          libxrandr-dev \
-          libxrender-dev \
-          libwebkit2gtk-4.0-dev \
-          libglu1-mesa-dev \
-          mesa-common-dev
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev \
+            libjack-jackd2-dev \
+            ladspa-sdk \
+            libcurl4-openssl-dev \
+            libfreetype6-dev \
+            libx11-dev \
+            libxcomposite-dev \
+            libxcursor-dev \
+            libxcursor-dev \
+            libxext-dev \
+            libxinerama-dev \
+            libxrandr-dev \
+            libxrender-dev \
+            libwebkit2gtk-4.0-dev \
+            libglu1-mesa-dev \
+            mesa-common-dev
 
-    - name: Configure CMake
-      run: |
-        cmake -B build \
-          -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} \
-          -DCMAKE_INSTALL_PREFIX=/usr/local
+      - name: Configure CMake
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} \
+            -DCMAKE_INSTALL_PREFIX=/usr/local
 
-    - name: Build plugin
-      run: cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
+      - name: Build plugin
+        run: cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
 
-    - name: Prepare Linux release package
-      run: |
-        mkdir -p release-package/linux
-        cp -r build/AicSdkPlugin_artefacts/Release/VST3 release-package/linux/
-        cp release/linux/install.sh release-package/linux/
-        chmod +x release-package/linux/install.sh
+      - name: Prepare Linux release package
+        run: |
+          mkdir -p release-package/linux
+          cp -r build/AicSdkPlugin_artefacts/Release/VST3 release-package/linux/
+          cp release/linux/install.sh release-package/linux/
+          chmod +x release-package/linux/install.sh
 
-    - name: Create Linux archive
-      run: |
-        cd release-package
-        tar -czf ../ai-coustics-demo-plugin-linux.tar.gz linux/
+      - name: Create Linux archive
+        run: |
+          cd release-package
+          tar -czf ../ai-coustics-demo-plugin-linux.tar.gz linux/
 
-    - name: Upload Linux artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: linux-build
-        path: |
-          ai-coustics-demo-plugin-linux.tar.gz
-        retention-days: 7
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: |
+            ai-coustics-demo-plugin-linux.tar.gz
+          retention-days: 7
 
   build-macos:
     runs-on: macos-13
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Configure CMake
-      run: |
-        cmake -B build \
-          -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} \
-          -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11 \
-          -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+      - name: Configure CMake
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11 \
+            -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
 
-    - name: Build plugin
-      run: cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
+      - name: Build plugin
+        run: cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
 
-    - name: Prepare macOS release package
-      run: |
-        mkdir -p release-package/macos
-        cp -r build/AicSdkPlugin_artefacts/Release/VST3 release-package/macos/
-        cp -r build/AicSdkPlugin_artefacts/Release/AU release-package/macos/
-        cp -r build/AicSdkPlugin_artefacts/Release/Standalone release-package/macos/
+      - name: Prepare macOS release package
+        run: |
+          mkdir -p release-package/macos
+          cp -r build/AicSdkPlugin_artefacts/Release/VST3 release-package/macos/
+          cp -r build/AicSdkPlugin_artefacts/Release/AU release-package/macos/
+          cp -r build/AicSdkPlugin_artefacts/Release/Standalone release-package/macos/
 
-        # Copy installer scripts
-        cp release/macos/*.sh release-package/macos/
-        cp release/macos/*.command release-package/macos/
-        cp release/macos/README_INSTALLER.md release-package/macos/
+          # Copy installer scripts
+          cp release/macos/*.sh release-package/macos/
+          cp release/macos/*.command release-package/macos/
+          cp release/macos/README_INSTALLER.md release-package/macos/
 
-        # Make scripts executable
-        chmod +x release-package/macos/*.sh
-        chmod +x release-package/macos/*.command
+          # Make scripts executable
+          chmod +x release-package/macos/*.sh
+          chmod +x release-package/macos/*.command
 
-    - name: Create macOS app installer
-      run: |
-        cd release-package/macos
-        ./create_app_installer.sh
+      - name: Create macOS app installer
+        run: |
+          cd release-package/macos
+          ./create_app_installer.sh
 
-    - name: Create macOS archive
-      run: |
-        cd release-package
-        tar -czf ../ai-coustics-demo-plugin-macos.tar.gz macos/
+      - name: Create macOS archive
+        run: |
+          cd release-package
+          tar -czf ../ai-coustics-demo-plugin-macos.tar.gz macos/
 
-    - name: Upload macOS artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: macos-build
-        path: |
-          ai-coustics-demo-plugin-macos.tar.gz
-        retention-days: 7
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-build
+          path: |
+            ai-coustics-demo-plugin-macos.tar.gz
+          retention-days: 7
 
   build-windows:
     runs-on: windows-2022
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Configure CMake
-      run: |
-        cmake -B build -G "Visual Studio 17 2022" -A x64 `
-          -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }}
+      - name: Configure CMake
+        run: |
+          cmake -B build -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }}
 
-    - name: Build plugin
-      run: cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
+      - name: Build plugin
+        run: cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
 
-    - name: Prepare Windows release package
-      run: |
-        New-Item -ItemType Directory -Force -Path "release-package\windows"
-        Copy-Item -Recurse -Force "build\AicSdkPlugin_artefacts\Release\VST3" "release-package\windows\"
-        Copy-Item -Force "release\windows\*.ps1" "release-package\windows\"
-        Copy-Item -Force "release\windows\*.bat" "release-package\windows\"
-        Copy-Item -Force "release\windows\README_INSTALLER.md" "release-package\windows\"
+      - name: Prepare Windows release package
+        run: |
+          New-Item -ItemType Directory -Force -Path "release-package\windows"
+          Copy-Item -Recurse -Force "build\AicSdkPlugin_artefacts\Release\VST3" "release-package\windows\"
+          Copy-Item -Force "release\windows\*.ps1" "release-package\windows\"
+          Copy-Item -Force "release\windows\*.bat" "release-package\windows\"
+          Copy-Item -Force "release\windows\README_INSTALLER.md" "release-package\windows\"
 
-    - name: Install PS2EXE and create Windows executable installer
-      run: |
-        Install-Module -Name ps2exe -Force -AllowClobber
-        cd release-package\windows
-        .\create_exe_installer.ps1
+      - name: Install PS2EXE and create Windows executable installer
+        run: |
+          Install-Module -Name ps2exe -Force -AllowClobber
+          cd release-package\windows
+          .\create_exe_installer.ps1
 
-    - name: Create Windows archive
-      run: |
-        cd release-package
-        Compress-Archive -Path "windows" -DestinationPath "..\ai-coustics-demo-plugin-windows.zip" -Force
+      - name: Create Windows archive
+        run: |
+          cd release-package
+          Compress-Archive -Path "windows" -DestinationPath "..\ai-coustics-demo-plugin-windows.zip" -Force
 
-    - name: Upload Windows artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: windows-build
-        path: |
-          ai-coustics-demo-plugin-windows.zip
-        retention-days: 7
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: |
+            ai-coustics-demo-plugin-windows.zip
+          retention-days: 7
 
   create-release:
     needs: [build-linux, build-macos, build-windows]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-      with:
-        merge-multiple: true
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
 
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      with:
-        name: Release ${{ github.ref_name }}
-        body: |
-          ## ai-coustics Demo Plugin ${{ github.ref_name }}
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ github.ref_name }}
+          body: |
+            ## ai-coustics Demo Plugin ${{ github.ref_name }}
 
-          Cross-platform audio plugin demonstrating the ai-coustics Speech Enhancement SDK.
+            Cross-platform audio plugin demonstrating the ai-coustics Speech Enhancement SDK.
 
-          ### Installation Instructions
+            ### Installation Instructions
 
-          #### Linux
-          1. Download and extract `ai-coustics-demo-plugin-linux.tar.gz`
-          2. Run `./install.sh` in the extracted folder
+            #### Linux
+            1. Download and extract `ai-coustics-demo-plugin-linux.tar.gz`
+            2. Run `./install.sh` in the extracted folder
 
-          #### macOS
-          1. Download and extract `ai-coustics-demo-plugin-macos.tar.gz`
-          2. Double-click `Install ai-coustics Plugins.app` for the best experience
-          3. Alternative: Run `./install.command` or `./install_with_gui.command`
+            #### macOS
+            1. Download and extract `ai-coustics-demo-plugin-macos.tar.gz`
+            2. Double-click `Install ai-coustics Plugins.app` for the best experience
+            3. Alternative: Run `./install.command` or `./install_with_gui.command`
 
-          #### Windows
-          1. Download and extract `ai-coustics-demo-plugin-windows.zip`
-          2. Double-click `Install ai-coustics Plugins.exe` for the easiest installation
-          3. Alternative: Run `install.bat` or `install_gui.ps1`
+            #### Windows
+            1. Download and extract `ai-coustics-demo-plugin-windows.zip`
+            2. Double-click `Install ai-coustics Plugins.exe` for the easiest installation
+            3. Alternative: Run `install.bat` or `install_gui.ps1`
 
-          ### Plugin Formats Included
-          - **VST3**: Compatible with most modern DAWs
-          - **AU**: macOS Audio Units (macOS only)
-          - **Standalone**: Independent application for testing
+            ### Plugin Formats Included
+            - **VST3**: Compatible with most modern DAWs
+            - **AU**: macOS Audio Units (macOS only)
+            - **Standalone**: Independent application for testing
 
-          ### System Requirements
-          - **Linux**: Modern distribution with ALSA/JACK support
-          - **macOS**: 10.11 El Capitan or later (Intel and Apple Silicon)
-          - **Windows**: Windows 10 or later (64-bit)
+            ### System Requirements
+            - **Linux**: Modern distribution with ALSA/JACK support
+            - **macOS**: 10.11 El Capitan or later (Intel and Apple Silicon)
+            - **Windows**: Windows 10 or later (64-bit)
 
-          ### Need Help?
-          - [GitHub Issues](https://github.com/ai-coustics/aic-sdk-plugin/issues)
-          - Email: [info@ai-coustics.com](mailto:info@ai-coustics.com)
-          - Website: [ai-coustics.com](https://ai-coustics.com)
-        files: |
-          ai-coustics-demo-plugin-linux.tar.gz
-          ai-coustics-demo-plugin-macos.tar.gz
-          ai-coustics-demo-plugin-windows.zip
-        draft: false
-        prerelease: false
-        generate_release_notes: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            ### Need Help?
+            - [GitHub Issues](https://github.com/ai-coustics/aic-sdk-plugin/issues)
+            - Email: [info@ai-coustics.com](mailto:info@ai-coustics.com)
+            - Website: [ai-coustics.com](https://ai-coustics.com)
+          files: |
+            ai-coustics-demo-plugin-linux.tar.gz
+            ai-coustics-demo-plugin-macos.tar.gz
+            ai-coustics-demo-plugin-windows.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
