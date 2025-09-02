@@ -10,7 +10,7 @@ echo =========================================
 echo.
 
 REM Define source and destination paths
-set "VST3_SOURCE=.\VST3\ai-coustics Demo.vst3"
+set "VST3_SOURCE=%~dp0VST3\ai-coustics Demo.vst3"
 set "VST3_DEST=%ProgramFiles%\Common Files\VST3"
 
 REM Check if source file exists
