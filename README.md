@@ -124,16 +124,9 @@ Feel free to reach out to us if you encounter any issues or need further assista
 
 ### Building from Source
 
-The project uses CMake and automatically fetches dependencies (JUCE and ai-coustics SDK):
+The project uses CMake and automatically fetches dependencies (JUCE and ai-coustics SDK).
 
-```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j
-```
-
-Build artifacts will be in `build/AicSdkPlugin_artefacts/Release/`.
-
-For more details, see [DEVELOPMENT.md](DEVELOPMENT.md).
+See [DEVELOPMENT.md](DEVELOPMENT.md) for build instructions.
 
 ### Automated Builds
 
