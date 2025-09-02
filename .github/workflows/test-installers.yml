@@ -161,7 +161,7 @@ jobs:
       - name: Build plugin for testing
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release
-          cmake --build build -j
+          cmake --build build --config Release
 
       - name: Test Windows installer scripts syntax
         run: |
