@@ -94,7 +94,7 @@ Please make sure the 'VST3' folder with the plugin is in the same directory as t
     Copy-Item -Path $VST3_SOURCE -Destination $VST3_DEST -Recurse -Force
 
     $successMessage = @"
-🎉 Installation completed successfully!
+Installation completed successfully!
 
 The ai-coustics Demo VST3 plugin has been installed to:
 $VST3_DEST
@@ -139,7 +139,7 @@ try {
 
     if (Test-Path $exePath) {
         Write-Host ""
-        Write-Host "✅ Successfully created: $OutputName" -ForegroundColor Green
+        Write-Host "Successfully created: $OutputName" -ForegroundColor Green
         Write-Host ""
         Write-Host "The executable has been configured to automatically request administrator privileges." -ForegroundColor Cyan
         Write-Host "Make sure to distribute the .exe and the 'VST3' folder together." -ForegroundColor Cyan
