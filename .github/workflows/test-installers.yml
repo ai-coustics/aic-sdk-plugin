@@ -181,7 +181,7 @@ jobs:
       - name: Prepare test environment
         run: |
           New-Item -ItemType Directory -Force -Path "test-install\windows"
-          Copy-Item -Recurse -Force "build\AicSdkPlugin_artefacts\${{ env.CMAKE_BUILD_TYPE }}\VST3" "test-install\windows\"
+          Copy-Item -Recurse -Force "build\AicSdkPlugin_artefacts\Release\VST3" "test-install\windows\"
           Copy-Item -Force "release\windows\*.ps1" "test-install\windows\"
           Copy-Item -Force "release\windows\*.bat" "test-install\windows\"
 
