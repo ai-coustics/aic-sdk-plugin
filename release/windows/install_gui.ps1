@@ -123,7 +123,7 @@ Error details: $($_.Exception.Message)
 # Install the VST3 plugin
 try {
     Write-Host "Installing VST3 plugin..."
-    Copy-Item -Path $VST3_SOURCE -Destination $VST3_DEST -Recurse -Force
+    Copy-Item -LiteralPath $VST3_SOURCE -Destination $VST3_DEST -Recurse -Force
 
     $successMessage = @"
 🎉 Installation completed successfully!
