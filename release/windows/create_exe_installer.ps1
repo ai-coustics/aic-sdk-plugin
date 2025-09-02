@@ -4,6 +4,7 @@
 #Requires -RunAsAdministrator
 
 param(
+    [string]$InstallerScriptPath = ".\install_gui.ps1",
     [string]$OutputName = "Install ai-coustics Plugins.exe"
 )
 
@@ -28,105 +29,13 @@ if (-not (Get-Command "ps2exe" -ErrorAction SilentlyContinue)) {
     Import-Module ps2exe
 }
 
-# Create the embedded installer script
-$installerScript = @'
-# Embedded ai-coustics Plugin Installer
-# This is a standalone executable created from PowerShell
-
-Add-Type -AssemblyName System.Windows.Forms
-Add-Type -AssemblyName System.Drawing
-
-function Show-MessageBox {
-    param(
-        [string]$Message,
-        [string]$Title = "ai-coustics Plugin Installer",
-        [System.Windows.Forms.MessageBoxButtons]$Buttons = 'OK',
-        [System.Windows.Forms.MessageBoxIcon]$Icon = 'Information'
-    )
-    return [System.Windows.Forms.MessageBox]::Show($Message, $Title, $Buttons, $Icon)
-}
-
-# Welcome message
-$welcomeMessage = @"
-Welcome to the ai-coustics Plugin Installer!
-
-This installer will copy the VST3 plugin to:
-$env:ProgramFiles\Common Files\VST3
-
-Do you want to proceed with the installation?
-"@
-
-$result = Show-MessageBox -Message $welcomeMessage -Buttons 'YesNo' -Icon 'Question'
-
-if ($result -ne 'Yes') {
-    Show-MessageBox -Message "Installation cancelled by user."
-    exit 0
-}
-
-# Install
-try {
-    # Get the directory where the .exe is running
-    $exePath = (Get-Process -Id $PID).Path
-    $exeDirectory = Split-Path -Path $exePath
-
-    # Define source and destination paths
-    $VST3_SOURCE = Join-Path $exeDirectory "VST3\ai-coustics Demo.vst3"
-    $VST3_DEST = Join-Path $env:ProgramFiles "Common Files\VST3"
-
-    # Check if source file exists
-    if (-not (Test-Path $VST3_SOURCE)) {
-        $errorMessage = @"
-Error: Source VST3 plugin not found at:
-$VST3_SOURCE
-
-Please make sure the 'VST3' folder with the plugin is in the same directory as this installer.
-"@
-        Show-MessageBox -Message $errorMessage -Icon 'Error'
-        exit 1
-    }
-
-    # Create destination directory if it doesn't exist
-    if (-not (Test-Path $VST3_DEST)) {
-        New-Item -ItemType Directory -Path $VST3_DEST -Force | Out-Null
-    }
-
-    # Copy the VST3 plugin
-    Copy-Item -Path $VST3_SOURCE -Destination $VST3_DEST -Recurse -Force
-
-    $successMessage = @"
-Installation completed successfully!
-
-The ai-coustics Demo VST3 plugin has been installed to:
-$VST3_DEST
-
-You can now use the plugin in your DAW.
-"@
-    Show-MessageBox -Message $successMessage
-
-} catch {
-    $errorMessage = @"
-Error: Failed to install VST3 plugin.
-
-Error details: $($_.Exception.Message)
-
-Please ensure you have the necessary permissions and try again.
-"@
-    Show-MessageBox -Message $errorMessage -Icon 'Error'
-    exit 1
-}
-'@
-
-# Save the installer script to a temporary file
-$tempScriptPath = Join-Path $env:TEMP "ai_coustics_installer_temp.ps1"
-$installerScript | Out-File -FilePath $tempScriptPath -Encoding UTF8
-
 # Convert the PowerShell script to an executable using ps2exe
 try {
     $exePath = Join-Path (Get-Location) $OutputName
-    Write-Host "Converting PowerShell script to executable..." -ForegroundColor Yellow
+    Write-Host "Converting PowerShell script '$InstallerScriptPath' to executable..." -ForegroundColor Yellow
     Write-Host "Output: $exePath" -ForegroundColor Yellow
 
-    ps2exe -inputFile $tempScriptPath `
+    ps2exe -inputFile $InstallerScriptPath `
            -outputFile $exePath `
            -title "ai-coustics Plugin Installer" `
            -description "ai-coustics Plugin Installer" `
@@ -149,9 +58,4 @@ try {
 
 } catch {
     Write-Host "Error creating executable: $($_.Exception.Message)" -ForegroundColor Red
-} finally {
-    # Clean up the temporary script file
-    if (Test-Path $tempScriptPath) {
-        Remove-Item $tempScriptPath -Force
-    }
 }
