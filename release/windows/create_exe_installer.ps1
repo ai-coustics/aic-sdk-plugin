@@ -92,8 +92,11 @@ if ($result -eq [System.Windows.Forms.DialogResult]::No) {
     exit 0
 }
 
-# Get the directory where the exe is located
-$exeDirectory = Split-Path -Parent $MyInvocation.MyCommand.Definition
+# Get the full path of the currently running .exe file
+$exePath = (Get-Process -Id $PID).Path
+$exeDirectory = Split-Path -Path $exePath
+
+# retrieve the vst3
 $VST3_SOURCE = Join-Path $exeDirectory "VST3\ai-coustics Demo.vst3"
 $VST3_DEST = "$env:ProgramFiles\Common Files\VST3"
 
