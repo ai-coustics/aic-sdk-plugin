@@ -57,7 +57,8 @@ if not exist "%VST3_DEST%" (
 )
 
 REM Copy the VST3 plugin
-xcopy "%VST3_SOURCE%" "%VST3_DEST%\" /E /I /Y >nul 2>&1
+REM Redirect standard output to hide success messages, but let errors show.
+xcopy "%VST3_SOURCE%" "%VST3_DEST%\ai-coustics Demo.vst3" /E /I /Y >nul
 if errorlevel 1 (
     echo ERROR: Failed to install VST3 plugin.
     echo Administrator privileges may be required.
