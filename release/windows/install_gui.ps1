@@ -51,8 +51,11 @@ if ($result -eq [System.Windows.Forms.DialogResult]::No) {
     exit 0
 }
 
+# Location of the script
+$ScriptDirectory = $PSScriptRoot
+
 # Define source and destination paths
-$VST3_SOURCE = ".\VST3\ai-coustics Demo.vst3"
+$VST3_SOURCE = $ScriptDirectory + "\VST3\ai-coustics Demo.vst3"
 $VST3_DEST = "$env:ProgramFiles\Common Files\VST3"
 
 # Check if source file exists
