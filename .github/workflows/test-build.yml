@@ -99,7 +99,7 @@ jobs:
           cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build plugin
-        run: cmake --build build -j
+        run: cmake --build build --config Release
 
       - name: Test Windows install scripts
         run: |

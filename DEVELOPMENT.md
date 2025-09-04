@@ -2,12 +2,23 @@
 
 ## Build from source
 
+### Linux/MacOS
+
 ```sh
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
 ```
 
 The release artefacts will be in `build/AicSdkPlugin_artefacts/Release`.
+
+### Windows
+
+```sh
+cmake -B build
+cmake --build build --config Release
+```
+
+The release artefacts will be in `build\AicSdkPlugin_artefacts\Release`.
 
 ### Linux Dependencies
 
