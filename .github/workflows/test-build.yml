@@ -42,18 +42,6 @@ jobs:
       - name: Build plugin
         run: cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
 
-      - name: Test Linux install script
-        run: |
-          # Copy built artifacts to release structure
-          mkdir -p test-release/linux
-          cp -r build/AicSdkPlugin_artefacts/Release/VST3 test-release/linux/
-          cp release/linux/install.sh test-release/linux/
-          chmod +x test-release/linux/install.sh
-
-          # Test script syntax
-          cd test-release/linux
-          bash -n install.sh
-
   test-macos:
     runs-on: macos-13
     steps:
@@ -67,27 +55,6 @@ jobs:
       - name: Build plugin
         run: cmake --build build -j
 
-      - name: Test macOS install scripts
-        run: |
-          # Copy built artifacts to release structure
-          mkdir -p test-release/macos
-          cp -r build/AicSdkPlugin_artefacts/Release/VST3 test-release/macos/
-          cp -r build/AicSdkPlugin_artefacts/Release/AU test-release/macos/
-          cp -r build/AicSdkPlugin_artefacts/Release/Standalone test-release/macos/
-
-          # Copy installer scripts
-          cp release/macos/*.sh test-release/macos/
-          cp release/macos/*.command test-release/macos/
-          cp release/macos/README_INSTALLER.md test-release/macos/
-
-          # Make scripts executable and test syntax
-          chmod +x test-release/macos/*.sh
-          chmod +x test-release/macos/*.command
-
-          cd test-release/macos
-          bash -n install.sh
-          bash -n create_app_installer.sh
-
   test-windows:
     runs-on: windows-2022
     steps:
@@ -100,46 +67,3 @@ jobs:
 
       - name: Build plugin
         run: cmake --build build --config Release
-
-      - name: Test Windows install scripts
-        run: |
-          # Copy built artifacts to release structure
-          New-Item -ItemType Directory -Force -Path "test-release\windows"
-          Copy-Item -Recurse -Force "build\AicSdkPlugin_artefacts\Release\VST3" "test-release\windows\"
-          Copy-Item -Force "release\windows\*.ps1" "test-release\windows\"
-          Copy-Item -Force "release\windows\*.bat" "test-release\windows\"
-          Copy-Item -Force "release\windows\README_INSTALLER.md" "test-release\windows\"
-
-          # Test PowerShell script syntax
-          cd test-release\windows
-          Get-Command .\install.ps1 -Syntax
-          Get-Command .\install_gui.ps1 -Syntax
-          Get-Command .\create_exe_installer.ps1 -Syntax
-
-          # Test batch file syntax by attempting to parse it
-          cmd /c "echo off && call install.bat /? >nul 2>&1 || echo Batch file syntax OK"
-
-  check-versions:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Check version consistency
-        run: |
-          # Extract version from CMakeLists.txt
-          CMAKE_VERSION=$(grep -oP '(?<=project\(AicSdkPlugin VERSION )\d+\.\d+\.\d+' CMakeLists.txt)
-          echo "CMake version: $CMAKE_VERSION"
-
-          # Check if there are any hardcoded versions in install scripts that might need updating
-          echo "Checking for hardcoded versions in install scripts..."
-          grep -r "ai-coustics Demo" release/ || echo "No hardcoded plugin names found"
-
-          # Verify all required files exist
-          echo "Verifying release file structure..."
-          test -f release/linux/install.sh && echo "✓ Linux install script exists"
-          test -f release/macos/install.sh && echo "✓ macOS install script exists"
-          test -f release/macos/create_app_installer.sh && echo "✓ macOS app installer script exists"
-          test -f release/windows/install.ps1 && echo "✓ Windows PowerShell script exists"
-          test -f release/windows/create_exe_installer.ps1 && echo "✓ Windows exe creator script exists"
-          test -f release/windows/install.bat && echo "✓ Windows batch script exists"

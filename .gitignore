@@ -1,5 +1,7 @@
 build
 .cache
-release/macos/package
-release/macos/ai-coustics-demo.pkg
+package
+aic-sdk-plugin.pkg
 .DS_store
+aic-sdk-plugin-macos.zip
+aic-sdk-plugin-linux.tar.gz
