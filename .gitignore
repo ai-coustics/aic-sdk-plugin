@@ -1,2 +1,5 @@
 build
 .cache
+release/macos/package
+release/macos/ai-coustics-demo.pkg
+.DS_store
