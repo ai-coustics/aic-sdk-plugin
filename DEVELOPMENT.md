@@ -32,7 +32,17 @@ To build the windows installer you will have to install [Inno Setup](https://jrs
 
 You can find all necessary Linux dependencies of JUCE in [this document](https://github.com/juce-framework/JUCE/blob/master/docs/Linux%20Dependencies.md).
 
-### License Key File
+
+## Release
+
+To create a release first check the following things:
+- Update version number in `CMakeLists.txt` line 2
+- Update version number in `scripts/macos/build-installer.sh` line 7 
+- Update version number in `scripts/windows/installer.iss` line 3
+
+Then create a tag on the main branch with the same version number you set in the files before.
+
+## License Key File
 
 If you want to set the license key programmatically, you have to store the key in the following file:
 
