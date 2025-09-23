@@ -12,7 +12,7 @@ The Demo Plugin provides:
 - **Real-time audio processing** with instant A/B comparison
 - **All model variants** available for testing and evaluation
 - **Production-ready C++ code** demonstrating best practices
-- **Cross-platform compatibility** (VST3, AU, Standalone)
+- **Cross-platform compatibility** (VST3, AU)
 
 ## Installation
 
