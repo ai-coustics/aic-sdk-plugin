@@ -93,6 +93,12 @@ jobs:
       - name: Build plugin
         run: cmake --build build --config Release -j
 
+      - name: Install winget
+        shell: powershell
+        run: |
+          Invoke-WebRequest -Uri "https://aka.ms/winget-installer" -OutFile "$env:TEMP\winget-installer.exe"
+          Start-Process -FilePath "$env:TEMP\winget-installer.exe" -ArgumentList "/silent /install" -Wait
+
       - name: Install Inno Setup
         run: winget install --id JRSoftware.InnoSetup -e --silent --accept-source-agreements
 
