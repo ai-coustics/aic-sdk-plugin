@@ -1,18 +1,17 @@
 name: Build and Release
-
+permissions:
+  contents: write
 on:
   push:
     tags:
       - "*"
   workflow_dispatch:
-
 jobs:
   build-linux:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
@@ -33,179 +32,104 @@ jobs:
             libwebkit2gtk-4.0-dev \
             libglu1-mesa-dev \
             mesa-common-dev
-
       - name: Configure CMake
         run: |
           cmake -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=/usr/local
-
       - name: Build plugin
         run: cmake --build build -j
-
-      - name: Prepare Linux release package
-        run: |
-          mkdir -p release-package/linux
-          cp -r build/AicSdkPlugin_artefacts/Release/VST3 release-package/linux/
-          cp release/linux/install.sh release-package/linux/
-          chmod +x release-package/linux/install.sh
-
       - name: Create Linux archive
         run: |
-          cd release-package
-          tar -czf ../ai-coustics-demo-plugin-linux.tar.gz linux/
-
+          ./scripts/linux/bundle-release.sh
+          # Rename the archive to include the tag name
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            mv aic-sdk-plugin-linux.tar.gz aic-sdk-plugin-linux-${{ github.ref_name }}.tar.gz
+          fi
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
           name: linux-build
           path: |
-            ai-coustics-demo-plugin-linux.tar.gz
-
+            aic-sdk-plugin-linux*.tar.gz
   build-macos:
     runs-on: macos-13
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Configure CMake
         run: |
           cmake -B build \
             -DCMAKE_BUILD_TYPE=Release
-
       - name: Build plugin
         run: cmake --build build -j
-
-      - name: Prepare macOS release package
-        run: |
-          mkdir -p release-package/macos
-          cp -r build/AicSdkPlugin_artefacts/Release/VST3 release-package/macos/
-          cp -r build/AicSdkPlugin_artefacts/Release/AU release-package/macos/
-          cp -r build/AicSdkPlugin_artefacts/Release/Standalone release-package/macos/
-
-          # Copy installer scripts
-          cp release/macos/*.sh release-package/macos/
-          cp release/macos/*.command release-package/macos/
-          cp release/macos/README_INSTALLER.md release-package/macos/
-
-          # Make scripts executable
-          chmod +x release-package/macos/*.sh
-          chmod +x release-package/macos/*.command
-
       - name: Create macOS app installer
-        run: |
-          cd release-package/macos
-          ./create_app_installer.sh
-
+        run: ./scripts/macos/build-installer.sh
       - name: Create macOS archive
         run: |
-          cd release-package
-          tar -czf ../ai-coustics-demo-plugin-macos.tar.gz macos/
-
+          ./scripts/macos/bundle-release.sh
+          # Rename the archive to include the tag name
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            mv aic-sdk-plugin-macos.zip aic-sdk-plugin-macos-${{ github.ref_name }}.zip
+          fi
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-build
           path: |
-            ai-coustics-demo-plugin-macos.tar.gz
-
+            aic-sdk-plugin-macos*.zip
   build-windows:
-    runs-on: windows-2022
+    runs-on: windows-2025
     steps:
+      - name: Install Inno Setup
+        run: winget install --id JRSoftware.InnoSetup -e --silent --accept-source-agreements
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Configure CMake
-        run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release
-
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build plugin
         run: cmake --build build --config Release -j
-
-      - name: Prepare Windows release package
+      - name: Create Windows Package
         run: |
-          New-Item -ItemType Directory -Force -Path "release-package\windows"
-          Copy-Item -Recurse -Force "build\AicSdkPlugin_artefacts\Release\VST3" "release-package\windows\"
-          Copy-Item -Force "release\windows\*.ps1" "release-package\windows\"
-          Copy-Item -Force "release\windows\*.bat" "release-package\windows\"
-          Copy-Item -Force "release\windows\README_INSTALLER.md" "release-package\windows\"
-
-      - name: Install PS2EXE and create Windows executable installer
+          Start -FilePath "$env:USERPROFILE\AppData\Local\Programs\Inno Setup 6\iscc.exe" -ArgumentList "/Orelease_package scripts\windows\installer.iss" -NoNewWindow -Wait
+      - name: Add docs to release package
         run: |
-          Install-Module -Name ps2exe -Force -AllowClobber
-          cd release-package\windows
-          .\create_exe_installer.ps1
-
+          Copy-Item "release\*" "release_package\"
       - name: Create Windows archive
         run: |
-          cd release-package
-          Compress-Archive -Path "windows" -DestinationPath "..\ai-coustics-demo-plugin-windows.zip" -Force
-
+          $archiveName = "aic-sdk-plugin-windows.zip"
+          if ("${{ github.ref_type }}" -eq "tag") {
+            $archiveName = "aic-sdk-plugin-windows-${{ github.ref_name }}.zip"
+          }
+          Compress-Archive -Path "release_package\*" -DestinationPath $archiveName -Force
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-build
           path: |
-            ai-coustics-demo-plugin-windows.zip
-
+            aic-sdk-plugin-windows*.zip
   create-release:
     needs: [build-linux, build-macos, build-windows]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           merge-multiple: true
-
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           name: Release ${{ github.ref_name }}
-          body: |
-            ## ai-coustics Demo Plugin ${{ github.ref_name }}
-
-            Cross-platform audio plugin demonstrating the ai-coustics Speech Enhancement SDK.
-
-            ### Installation Instructions
-
-            #### Linux
-            1. Download and extract `ai-coustics-demo-plugin-linux.tar.gz`
-            2. Run `./install.sh` in the extracted folder
-
-            #### macOS
-            1. Download and extract `ai-coustics-demo-plugin-macos.tar.gz`
-            2. Double-click `Install ai-coustics Plugins.app` for the best experience
-            3. Alternative: Run `./install.command` or `./install_with_gui.command`
-
-            #### Windows
-            1. Download and extract `ai-coustics-demo-plugin-windows.zip`
-            2. Double-click `Install ai-coustics Plugins.exe` for the easiest installation
-            3. Alternative: Run `install.bat` or `install_gui.ps1`
-
-            ### Plugin Formats Included
-            - **VST3**: Compatible with most modern DAWs
-            - **AU**: macOS Audio Units (macOS only)
-            - **Standalone**: Independent application for testing
-
-            ### System Requirements
-            - **Linux**: Modern distribution with ALSA/JACK support
-            - **macOS**: 10.11 El Capitan or later (Intel and Apple Silicon)
-            - **Windows**: Windows 10 or later (64-bit)
-
-            ### Need Help?
-            - [GitHub Issues](https://github.com/ai-coustics/aic-sdk-plugin/issues)
-            - Email: [info@ai-coustics.com](mailto:info@ai-coustics.com)
-            - Website: [ai-coustics.com](https://ai-coustics.com)
+          body_path: ${{ github.workspace }}/release/ReleaseNotes.md
           files: |
-            ai-coustics-demo-plugin-linux.tar.gz
-            ai-coustics-demo-plugin-macos.tar.gz
-            ai-coustics-demo-plugin-windows.zip
+            aic-sdk-plugin-linux-*.tar.gz
+            aic-sdk-plugin-macos-*.zip
+            aic-sdk-plugin-windows-*.zip
           draft: false
           prerelease: false
-          generate_release_notes: true
+          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

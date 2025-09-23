@@ -3,7 +3,7 @@
 # Bash script to install VST3 plugin to the default Linux VST3 folder
 
 # Define source and destination paths
-sourcePath="./VST3/ai-coustics Demo.vst3"
+sourcePath="./ai-coustics Demo.vst3"
 defaultVST3Path="$HOME/.vst3"
 
 # Check if source file exists
