@@ -22,12 +22,14 @@ If you do not have a DAW installed, we recommend installing [REAPER](https://www
 7. Enter your administrator password when prompted and follow the installer instructions to complete the installation. Once completed, the VST3 and AU plugins will be installed in the default system locations and can be opened in your favorite DAW by the name `ai-coustics Demo`.
 
 - [Official Apple Documentation](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unknown-developer-mh40616/mac)
-- AU Location: `Library/Audio/Plug-Ins/Components/ai-coustics Demo.component`
-- VST3 Location: `/Library/Audio/Plug-Ins/VST3/ai-coustics Demo.vst3`
+- AU Install Location: `Library/Audio/Plug-Ins/Components/ai-coustics Demo.component`
+- VST3 Install Location: `/Library/Audio/Plug-Ins/VST3/ai-coustics Demo.vst3`
 
 ### Windows
 
-*Windows installation instructions coming soon.*
+To install the plugin on Windows, open the file `aic-sdk-plugin-windows.exe`. At the first time you will get a warning `Windows protected your PC`, click on `More info` and `Run anyway`. Now click `Yes` on the `User Account Control` dialog and follow the instructions of the installer. When it warns you that the folder `Common Files` already exists just proceed. Now you can open the plugin in your favorite DAW using the name `ai-coustics Demo`.
+
+The plugin will be installed to `C:\Program Files\Common Files\VST3\`.
 
 ### Linux
 
