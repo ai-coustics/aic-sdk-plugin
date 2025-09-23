@@ -259,7 +259,7 @@ void LicenseDialog::setupComponents()
     addAndMakeVisible(m_cancelButton);
 
     // Set dialog size
-    setSize(415, 298);
+    setSize(415, 310);
 }
 
 void LicenseDialog::paint(juce::Graphics& g)
@@ -276,7 +276,7 @@ void LicenseDialog::resized()
 {
     auto area = getLocalBounds().reduced(24);
 
-    auto firstLine = area.removeFromTop(24);
+    auto firstLine = area.removeFromTop(34);
     // Alert Triangle
     m_alertTriangle->setTransformToFit(firstLine.removeFromLeft(24).reduced(0.f, 4.f).toFloat(),
                                        juce::RectanglePlacement::centred);

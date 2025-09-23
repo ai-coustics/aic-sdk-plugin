@@ -101,7 +101,7 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
     g.setFont(16.f);
     g.drawText("Enhancement Level", bounds.removeFromTop(24), juce::Justification::centredLeft);
 
-    enhancementSlider.setBounds(bounds.removeFromTop(54.f));
+    enhancementSlider.setBounds(bounds.removeFromTop(54.f).expanded(7, 0));
 
     bounds.removeFromTop(24.f);
 

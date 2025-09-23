@@ -17,11 +17,11 @@ enum ModelState
 
 struct ModelInfo
 {
-    std::string modelSampleRate;
-    std::string modelWindowLength;
+    std::string optimalSampleRate;
+    std::string windowLength;
     std::string modelDelay;
     std::string optimalNumFrames;
-    std::string currentOutputDelay;
+    std::string outputDelay;
     ModelState  modelState;
 
     // Constructor for easy initialization
@@ -30,9 +30,9 @@ struct ModelInfo
     ModelInfo(const ModelState state) : modelState(state) {}
 
     ModelInfo(const int sr, const int w, const int md, const int nf, const int od)
-        : modelSampleRate(std::to_string(sr) + " Hz"), modelWindowLength(std::to_string(w) + " ms"),
+        : optimalSampleRate(std::to_string(sr) + " Hz"), windowLength(std::to_string(w) + " ms"),
           modelDelay(std::to_string(md) + " ms"), optimalNumFrames(std::to_string(nf)),
-          currentOutputDelay(std::to_string(od) + " ms")
+          outputDelay(std::to_string(od) + " ms")
     {
         modelState = ModelState::Initilized;
     }
@@ -73,11 +73,11 @@ class AicModelInfoBox : public juce::Component
         {
             // Create a vector of label-value pairs for easy iteration
             std::vector<std::pair<std::string, std::string>> infoLines = {
-                {"Model Sample Rate", modelInfo.modelSampleRate},
-                {"Model Window Length", modelInfo.modelWindowLength},
-                {"Model Delay", modelInfo.modelDelay},
+                {"Optimal Sample Rate", modelInfo.optimalSampleRate},
                 {"Optimal Num Frames", modelInfo.optimalNumFrames},
-                {"Current Output Delay", modelInfo.currentOutputDelay}};
+                {"Window Length", modelInfo.windowLength},
+                {"Model Delay", modelInfo.modelDelay},
+                {"Total Output Delay", modelInfo.outputDelay}};
 
             // Draw each line
             for (size_t i = 0; i < infoLines.size(); ++i)

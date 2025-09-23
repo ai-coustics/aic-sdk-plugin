@@ -2,7 +2,6 @@ name: Test Build
 
 on:
   pull_request:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -35,12 +34,10 @@ jobs:
 
       - name: Configure CMake
         run: |
-          cmake -B build \
-            -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} \
-            -DCMAKE_INSTALL_PREFIX=/usr/local
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build plugin
-        run: cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j ${{ env.JUCE_BUILD_PARALLEL_JOBS }}
+        run: cmake --build build -j
 
   test-macos:
     runs-on: macos-13

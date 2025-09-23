@@ -1,6 +1,8 @@
-# ai-coustics SDK Example Plugin
+# ai-coustics SDK Demo Plugin
 
-![Plugin Screenshot](assets/screenshot.png)
+<div align="center">
+    <img src="assets/screenshot.png" alt="Plugin Screenshot" width="50%">
+</div>
 
 Experience our state-of-the-art speech enhancement technology firsthand with the ai-coustics Demo Plugin - a comprehensive audio plugin that provides instant access to all models in our Speech Enhancement SDK. Built for professional audio workflows, our SDK delivers cutting-edge real-time audio processing that dramatically improves speech clarity, reduces noise, and enhances intelligibility across any audio content.
 
@@ -10,7 +12,7 @@ The Demo Plugin provides:
 - **Real-time audio processing** with instant A/B comparison
 - **All model variants** available for testing and evaluation
 - **Production-ready C++ code** demonstrating best practices
-- **Cross-platform compatibility** (VST3, AU, Standalone)
+- **Cross-platform compatibility** (VST3, AU)
 
 ## Installation
 
@@ -25,7 +27,7 @@ To use the SDK, you'll need a license key. Contact our team to receive your time
 
 Once you have your license key, set it as an environment variable or pass it directly to the SDK initialization functions.
 
-### Integrate yourself
+## Build your own Application
 
 If you want to integrate the SDK in your application you can use our language bindings:
 

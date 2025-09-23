@@ -25,7 +25,7 @@ struct SliderLnF : juce::LookAndFeel_V4
 
         // Tooltip and thumb will otherwise move outside of the window
         auto sliderStart     = tooltipWidth / 2.f;
-        auto sliderEnd       = width - tooltipWidth / 2.f;
+        auto sliderEnd       = (float) width - tooltipWidth / 2.f;
         auto mappedSliderPos = juce::jmap(sliderPos, 0.f, (float) width, sliderStart, sliderEnd);
 
         // Always make space for the tooltip
@@ -65,7 +65,7 @@ struct SliderLnF : juce::LookAndFeel_V4
         auto sliderBounds     = bounds.removeFromTop(sliderThumbWidth);
 
         // Background Path
-        auto backgroundTrackBounds = sliderBounds.reduced(sliderStart, 7.f);
+        auto backgroundTrackBounds = sliderBounds.reduced(sliderStart - 10.f, 7.f);
         g.setColour(aic::ui::BLUE_10);
         g.fillRoundedRectangle(backgroundTrackBounds, backgroundTrackBounds.getHeight() / 2.f);
 
@@ -85,11 +85,9 @@ struct SliderLnF : juce::LookAndFeel_V4
         // Labels
         g.setColour(aic::ui::BLACK_60);
         g.setFont(14.f);
-        auto labelBounds = bounds.removeFromLeft(10.f);
-        g.drawText("0", labelBounds.withCentre({sliderStart, bounds.getCentreY()}),
-                   juce::Justification::centredTop);
-        g.drawText("1", bounds.withCentre({sliderEnd, bounds.getCentreY()}),
-                   juce::Justification::centredTop);
+        auto labelBounds = bounds.reduced(sliderStart - 10.f, 0.f);
+        g.drawText("0", labelBounds, juce::Justification::topLeft);
+        g.drawText("1", labelBounds, juce::Justification::topRight);
     }
 
     auto getSliderLayout(juce::Slider& slider) -> juce::Slider::SliderLayout override
@@ -117,7 +115,57 @@ class AicSlider : public juce::Slider
         setLookAndFeel(nullptr);
     }
 
+    bool hitTest(int x, int y) override
+    {
+        auto bounds = getLocalBounds();
+
+        bounds.removeFromLeft(7);
+        bounds.removeFromRight(7);
+        bounds.removeFromTop(18 + 4);
+
+        return bounds.removeFromTop(20).contains(x, y);
+    }
+
+    void mouseDown(const juce::MouseEvent& e) override
+
+    {
+        auto remappedEvent = e.withNewPosition(remapMousePosition(e.getPosition()));
+
+        juce::Slider::mouseDown(remappedEvent);
+    }
+
+    void mouseDrag(const juce::MouseEvent& e) override
+
+    {
+        auto remappedEvent = e.withNewPosition(remapMousePosition(e.getPosition()));
+
+        juce::Slider::mouseDrag(remappedEvent);
+    }
+
   private:
+    juce::Point<int> remapMousePosition(juce::Point<int> mousePos) const
+    {
+        auto fullBounds = getLocalBounds();
+
+        auto reducedBounds = getLocalBounds();
+        auto tooltipWidth  = 34;
+        reducedBounds.removeFromLeft(tooltipWidth / 2);
+        reducedBounds.removeFromRight(tooltipWidth / 2);
+
+        // Remap X coordinate from reduced bounds to full bounds
+        float ratio = (static_cast<float>(mousePos.x - reducedBounds.getX())) /
+                      (float) reducedBounds.getWidth();
+
+        ratio = juce::jlimit(0.0f, 1.0f, ratio);
+
+        int remappedX =
+            fullBounds.getX() + (int) (ratio * static_cast<float>(fullBounds.getWidth()));
+
+        return juce::Point<int>(remappedX, mousePos.y);
+
+        return mousePos; // For rotary sliders, no remapping needed
+    }
+
     SliderLnF m_lnf;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AicSlider)

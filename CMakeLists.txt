@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(AicSdkPlugin VERSION 0.6.2 LANGUAGES C CXX)
+project(AicSdkPlugin VERSION 0.6.3 LANGUAGES C CXX)
 
 # Export compile commands for vscode, vim, zed etc.
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
