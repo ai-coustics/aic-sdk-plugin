@@ -108,6 +108,7 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
 
         juce::File licenseFile = appDataDir.getChildFile("aic").getChildFile("aic-sdk-license.txt");
 
+        std::cout << licenseFile.getFullPathName() << std::endl;
         return licenseFile;
     }
 
