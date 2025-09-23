@@ -38,4 +38,4 @@ If you want to set the license key programmatically, you have to store the key i
 
 - Linux: `~/.config/aic/aic-sdk-license.txt`
 - macOS: ``
-- Windows: ``
+- Windows: `C:\Users\<user>\AppData\Roaming\aic\aic-sdk-license.txt`
