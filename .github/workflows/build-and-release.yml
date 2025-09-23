@@ -104,7 +104,7 @@ jobs:
 
       - name: Add docs to release package
         run: |
-          Copy-Item "docs\*" "release_package\"
+          Copy-Item "release\*" "release_package\"
 
       - name: Create Windows archive
         run: |
