@@ -2,6 +2,8 @@
 
 ## Build from source
 
+The release artefacts will be in `build\AicSdkPlugin_artefacts\Release`.
+
 ### Linux/MacOS
 
 ```sh
@@ -11,6 +13,12 @@ cmake --build build -j
 
 The release artefacts will be in `build/AicSdkPlugin_artefacts/Release`.
 
+To build the macOS installer you have to run the script:
+
+```sh
+./scripts/macos/build-installer.sh
+```
+
 ### Windows
 
 ```sh
@@ -18,7 +26,7 @@ cmake -B build
 cmake --build build --config Release
 ```
 
-The release artefacts will be in `build\AicSdkPlugin_artefacts\Release`.
+To build the windows installer you will have to install [Inno Setup](https://jrsoftware.org/isinfo.php) and load the file [installer.iss](scripts/windows/installer.iss).
 
 ### Linux Dependencies
 
