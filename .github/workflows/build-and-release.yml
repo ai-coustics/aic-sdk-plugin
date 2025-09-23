@@ -99,7 +99,6 @@ jobs:
       - name: Create Windows Package
         run: |
           Start -FilePath "$env:USERPROFILE\AppData\Local\Programs\Inno Setup 6\iscc.exe" -ArgumentList "/O. scripts\windows\installer.iss" -NoNewWindow -Wait
-          Move-Item -Path "Output\aic-sdk-plugin-windows.exe" -Destination ".\aic-sdk-plugin-windows.exe"
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
