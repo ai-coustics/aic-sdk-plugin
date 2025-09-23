@@ -5,3 +5,4 @@ aic-sdk-plugin.pkg
 .DS_store
 aic-sdk-plugin-macos.zip
 aic-sdk-plugin-linux.tar.gz
+installer-output
