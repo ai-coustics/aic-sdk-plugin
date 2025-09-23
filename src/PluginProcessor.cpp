@@ -22,7 +22,7 @@ AicDemoAudioProcessor::AicDemoAudioProcessor()
                  juce::ParameterID{"voicegain", 1}, "Voice Gain",
                  juce::NormalisableRange<float>(-12.0f, 12.0f), 1.0f),
              std::make_unique<juce::AudioParameterBool>(juce::ParameterID{"noisegateenable", 0},
-                                                        "Noise Gate Enable", true)})
+                                                        "Noise Gate Enable", false)})
 {
     // Load and validate license key
     loadAndValidateLicense();
@@ -106,6 +106,8 @@ void AicDemoAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
     m_currentNumFrames   = static_cast<size_t>(samplesPerBlock);
 
     initializeModel();
+
+    setLatencySamples((int) m_model->get_output_delay());
 }
 
 void AicDemoAudioProcessor::releaseResources()
