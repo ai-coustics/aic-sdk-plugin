@@ -97,10 +97,9 @@ jobs:
         run: cmake --build build --config Release -j
 
       - name: Create Windows Package
-        shell: cmd
         run: |
-          "%USERPROFILE%\AppData\Local\Programs\Inno Setup 6\iscc.exe" /Oout scripts\windows\installer.icc
-          move "out\aic-sdk-plugin-windows.exe" ".\aic-sdk-plugin-windows.exe"
+          & "$env:USERPROFILE\AppData\Local\Programs\Inno Setup 6\iscc.exe" /O. "scripts\windows\installer.icc"
+          Move-Item -Path "Output\aic-sdk-plugin-windows.exe" -Destination ".\aic-sdk-plugin-windows.exe"
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
