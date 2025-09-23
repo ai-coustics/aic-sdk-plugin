@@ -1,56 +1,78 @@
 # Installation Guide
 
-Thank you for testing our ai-coustics speech enhancement demo. This is an audio plugin that can be opened in your favorite DAW (Digital Audio Workstation).
-If you do not have a DAW installed, we recommend installing [REAPER](https://www.reaper.fm/), because it can be evaluated for free.
+Thank you for testing our **ai-coustics speech enhancement demo**.
+This is an audio plugin that can be opened in your favorite DAW (Digital Audio Workstation).
+
+If you do not have a DAW installed, we recommend installing [REAPER](https://www.reaper.fm/), which can be evaluated for free.
+
+---
 
 ## Install Audio Plugin
 
 ### macOS
 
-1. Start the installer by double-clicking on the `aic-sdk-plugin.pkg` file.
-
-2. The first time you open it, you will see a security warning saying the developer cannot be verified. Click `Done` to close this dialog.
-
+1. Locate the file `aic-sdk-plugin.pkg` and double-click it to start the installer.
+2. You will see a warning saying the developer cannot be verified. Click **Done** to close this dialog.
 3. Open **System Settings** from the Apple menu or Dock.
+4. Go to **Privacy & Security** in the sidebar.
+5. In the **Security** section, you should see a message about the blocked installer. Click **Open Anyway**.
+6. When prompted again, click **Open Anyway**.
+7. Enter your administrator password and follow the installer instructions to complete installation.
 
-4. Click on **Privacy & Security** in the sidebar.
+The plugin will now be installed and available as `ai-coustics Demo` in your DAW.
 
-5. Scroll down to the **Security** section. You should see a message about the blocked installer with an **Open anyways** button next to it. Click **Open anyway**.
-
-6. This time in the popup click **Open anyway**.
-
-7. Enter your administrator password when prompted and follow the installer instructions to complete the installation. Once completed, the VST3 and AU plugins will be installed in the default system locations and can be opened in your favorite DAW by the name `ai-coustics Demo`.
-
-- [Official Apple Documentation](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unknown-developer-mh40616/mac)
-- AU Install Location: `Library/Audio/Plug-Ins/Components/ai-coustics Demo.component`
-- VST3 Install Location: `/Library/Audio/Plug-Ins/VST3/ai-coustics Demo.vst3`
-
-### Windows
-
-To install the plugin on Windows, open the file `aic-sdk-plugin-windows.exe`. At the first time you will get a warning `Windows protected your PC`, click on `More info` and `Run anyway`. Now click `Yes` on the `User Account Control` dialog and follow the instructions of the installer. When it warns you that the folder `Common Files` already exists just proceed. Now you can open the plugin in your favorite DAW using the name `ai-coustics Demo`.
-
-The plugin will be installed to `C:\Program Files\Common Files\VST3\`.
-
-### Linux
-
-Install the VST3 plugin to the default system location (`~/.vst3/`) by running the install script in your terminal:
-
-```sh
-./install.sh
-```
-
-The plugin can be opened in your favorite DAW by the name `ai-coustics Demo`.
-
-## License Key
-
-When you open the plugin in your DAW for the first time, a license key dialog will pop up. Paste the provided license key in the text input and activate the license. A license key can be acquired by getting in contact with us, and soon you will be able to create your own key in the developer portal.
-
-The license keys are stored in the following files and can be placed there manually as well:
-
-- Linux: `~/.config/aic/aic-sdk-license.txt`
-- macOS: `~/Library/aic/aic-sdk-license.txt`
-- Windows: `C:\Users\<user>\AppData\Roaming\aic\aic-sdk-license.txt`
+* AU Install Location: `Library/Audio/Plug-Ins/Components/ai-coustics Demo.component`
+* VST3 Install Location: `/Library/Audio/Plug-Ins/VST3/ai-coustics Demo.vst3`
+* [Apple Documentation](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unknown-developer-mh40616/mac)
 
 ---
 
-Feel free to reach out to us if you encounter any issues or need further assistance.
+### Windows
+
+1. Locate the file `aic-sdk-plugin-windows.exe` and double-click it to start the installer.
+2. The first time you run it, you will see a **Windows protected your PC** warning.
+
+   * Click **More info** → **Run anyway**.
+3. Confirm the **User Account Control** dialog by clicking **Yes**.
+4. Follow the installer instructions. If it warns that the `Common Files` folder already exists, simply proceed.
+
+The plugin will now be installed and available as `ai-coustics Demo` in your DAW.
+
+* VST3 Install Location: `C:\Program Files\Common Files\VST3\`
+
+---
+
+### Linux
+
+1. Open a terminal in the directory containing the installer files.
+
+2. Run the installation script:
+
+   ```sh
+   ./install.sh
+   ```
+
+3. The plugin will be installed to the default system location.
+
+The plugin will now be available as `ai-coustics Demo` in your DAW.
+
+* VST3 Install Location: `~/.vst3/`
+
+---
+
+## License Key
+
+When you open the plugin in your DAW for the first time, a license key dialog will appear.
+
+1. Paste the provided license key into the text input field.
+2. Click **Activate**.
+
+You can also place the license key manually in the following file paths:
+
+* **Linux**: `~/.config/aic/aic-sdk-license.txt`
+* **macOS**: `~/Library/aic/aic-sdk-license.txt`
+* **Windows**: `C:\Users\<user>\AppData\Roaming\aic\aic-sdk-license.txt`
+
+---
+
+If you run into any issues, feel free to reach out to us for support.
