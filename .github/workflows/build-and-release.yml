@@ -88,37 +88,23 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configure CMake
-        run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build plugin
         run: cmake --build build --config Release -j
 
-      - name: Prepare Windows release package
-        run: |
-          New-Item -ItemType Directory -Force -Path "release-package\windows"
-          Copy-Item -Recurse -Force "build\AicSdkPlugin_artefacts\Release\VST3" "release-package\windows\"
-          Copy-Item -Force "release\windows\*.ps1" "release-package\windows\"
-          Copy-Item -Force "release\windows\*.bat" "release-package\windows\"
-          Copy-Item -Force "release\windows\README_INSTALLER.md" "release-package\windows\"
+      - name: Install Inno Setup
+        run: winget install --id JRSoftware.InnoSetup -e --silent --accept-source-agreements
 
-      - name: Install PS2EXE and create Windows executable installer
-        run: |
-          Install-Module -Name ps2exe -Force -AllowClobber
-          cd release-package\windows
-          .\create_exe_installer.ps1
-
-      - name: Create Windows archive
-        run: |
-          cd release-package
-          Compress-Archive -Path "windows" -DestinationPath "..\ai-coustics-demo-plugin-windows.zip" -Force
+      - name: Create Windows Package
+        run: "%USERPROFILE%\AppData\Local\Programs\Inno Setup 6\iscc.exe" /O. scripts\windows\installer.icc
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-build
           path: |
-            ai-coustics-demo-plugin-windows.zip
+            aic-sdk-plugin-windows.exe
 
   create-release:
     needs: [build-linux, build-macos, build-windows]
@@ -141,7 +127,7 @@ jobs:
           files: |
             aic-sdk-plugin-linux.tar.gz
             aic-sdk-plugin-macos.zip
-            aic-sdk-plugin-windows.zip
+            aic-sdk-plugin-windows.exe
           draft: false
           prerelease: false
           generate_release_notes: true
