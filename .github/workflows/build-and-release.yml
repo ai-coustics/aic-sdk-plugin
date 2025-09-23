@@ -96,7 +96,8 @@ jobs:
       - name: Build plugin
         run: cmake --build build --config Release -j
       - name: Create Windows Package
-        run: \"%USERPROFILE%\AppData\Local\Programs\Inno Setup 6\iscc.exe\" /O. scripts\windows\installer.icc
+        run: |
+          "%USERPROFILE%\AppData\Local\Programs\Inno Setup 6\iscc.exe" /O. scripts\windows\installer.icc
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
