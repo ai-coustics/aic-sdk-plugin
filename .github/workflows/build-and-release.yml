@@ -97,6 +97,7 @@ jobs:
         run: cmake --build build --config Release -j
 
       - name: Create Windows Package
+        shell: cmd
         run: |
           "%USERPROFILE%\AppData\Local\Programs\Inno Setup 6\iscc.exe" /Oout scripts\windows\installer.icc
           move "out\aic-sdk-plugin-windows.exe" ".\aic-sdk-plugin-windows.exe"
