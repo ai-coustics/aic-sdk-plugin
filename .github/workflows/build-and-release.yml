@@ -1,20 +1,17 @@
 name: Build and Release
 permissions:
   contents: write
-
 on:
   push:
     tags:
       - "*"
   workflow_dispatch:
-
 jobs:
   build-linux:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
@@ -35,88 +32,82 @@ jobs:
             libwebkit2gtk-4.0-dev \
             libglu1-mesa-dev \
             mesa-common-dev
-
       - name: Configure CMake
         run: |
           cmake -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=/usr/local
-
       - name: Build plugin
         run: cmake --build build -j
-
       - name: Create Linux archive
         run: |
           ./scripts/linux/bundle-release.sh
-
+          # Rename the archive to include the tag name
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            mv aic-sdk-plugin-linux.tar.gz aic-sdk-plugin-linux-${{ github.ref_name }}.tar.gz
+          fi
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
           name: linux-build
           path: |
-            aic-sdk-plugin-linux.tar.gz
-
+            aic-sdk-plugin-linux*.tar.gz
   build-macos:
     runs-on: macos-13
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Configure CMake
         run: |
           cmake -B build \
             -DCMAKE_BUILD_TYPE=Release
-
       - name: Build plugin
         run: cmake --build build -j
-
       - name: Create macOS app installer
         run: ./scripts/macos/build-installer.sh
-
       - name: Create macOS archive
-        run: ./scripts/macos/bundle-release.sh
-
+        run: |
+          ./scripts/macos/bundle-release.sh
+          # Rename the archive to include the tag name
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            mv aic-sdk-plugin-macos.zip aic-sdk-plugin-macos-${{ github.ref_name }}.zip
+          fi
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-build
           path: |
-            aic-sdk-plugin-macos.zip
-
+            aic-sdk-plugin-macos*.zip
   build-windows:
     runs-on: windows-2025
     steps:
       - name: Install Inno Setup
         run: winget install --id JRSoftware.InnoSetup -e --silent --accept-source-agreements
-
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Configure CMake
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
-
       - name: Build plugin
         run: cmake --build build --config Release -j
-
       - name: Create Windows Package
         run: |
           Start -FilePath "$env:USERPROFILE\AppData\Local\Programs\Inno Setup 6\iscc.exe" -ArgumentList "/Orelease_package scripts\windows\installer.iss" -NoNewWindow -Wait
-
       - name: Add docs to release package
         run: |
           Copy-Item "release\*" "release_package\"
-
       - name: Create Windows archive
         run: |
-          Compress-Archive -Path "release_package\" -DestinationPath "aic-sdk-plugin-windows.zip" -Force
-
+          $archiveName = "aic-sdk-plugin-windows.zip"
+          if ("${{ github.ref_type }}" -eq "tag") {
+            $archiveName = "aic-sdk-plugin-windows-${{ github.ref_name }}.zip"
+          }
+          Compress-Archive -Path "release_package\*" -DestinationPath $archiveName -Force
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-build
           path: |
-            aic-sdk-plugin-windows.zip
-
+            aic-sdk-plugin-windows*.zip
   create-release:
     needs: [build-linux, build-macos, build-windows]
     runs-on: ubuntu-22.04
@@ -124,21 +115,19 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           merge-multiple: true
-
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           name: Release ${{ github.ref_name }}
           body_path: ${{ github.workspace }}/release/ReleaseNotes.md
           files: |
-            aic-sdk-plugin-linux.tar.gz
-            aic-sdk-plugin-macos.zip
-            aic-sdk-plugin-windows.zip
+            aic-sdk-plugin-linux-*.tar.gz
+            aic-sdk-plugin-macos-*.zip
+            aic-sdk-plugin-windows-*.zip
           draft: false
           prerelease: false
           generate_release_notes: false
