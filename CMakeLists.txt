@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(AicSdkPlugin VERSION 0.6.2 LANGUAGES C CXX)
+project(AicSdkPlugin VERSION 0.6.3 LANGUAGES C CXX)
 
 # Export compile commands for vscode, vim, zed etc.
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
@@ -17,7 +17,7 @@ include(FetchContent)
 FetchContent_Declare(
     juce
     GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-    GIT_TAG 8.0.8
+    GIT_TAG 8.0.10
     GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(juce)
