@@ -1,4 +1,4 @@
-# ai-coustics SDK Example Plugin
+# ai-coustics SDK Demo Plugin
 
 <img src="assets/screenshot.png" alt="Plugin Screenshot" width="50%">
 
@@ -25,7 +25,7 @@ To use the SDK, you'll need a license key. Contact our team to receive your time
 
 Once you have your license key, set it as an environment variable or pass it directly to the SDK initialization functions.
 
-### Integrate yourself
+### Build your own Application
 
 If you want to integrate the SDK in your application you can use our language bindings:
 
