@@ -100,14 +100,22 @@ jobs:
 
       - name: Create Windows Package
         run: |
-          Start -FilePath "$env:USERPROFILE\AppData\Local\Programs\Inno Setup 6\iscc.exe" -ArgumentList "/O. scripts\windows\installer.iss" -NoNewWindow -Wait
+          Start -FilePath "$env:USERPROFILE\AppData\Local\Programs\Inno Setup 6\iscc.exe" -ArgumentList "/Orelease_package scripts\windows\installer.iss" -NoNewWindow -Wait
+
+      - name: Add docs to release package
+        run: |
+          Copy-Item "docs\*" "release_package\"
+
+      - name: Create Windows archive
+        run: |
+          Compress-Archive -Path "release_package\" -DestinationPath "aic-sdk-plugin-windows.zip" -Force
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-build
           path: |
-            aic-sdk-plugin-windows.exe
+            aic-sdk-plugin-windows.zip
 
   create-release:
     needs: [build-linux, build-macos, build-windows]
@@ -130,7 +138,7 @@ jobs:
           files: |
             aic-sdk-plugin-linux.tar.gz
             aic-sdk-plugin-macos.zip
-            aic-sdk-plugin-windows.exe
+            aic-sdk-plugin-windows.zip
           draft: false
           prerelease: false
           generate_release_notes: false
