@@ -126,7 +126,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: Release ${{ github.ref_name }}
-          body: ${{ github.workspace }}/release/ReleaseNotes.md
+          body_path: ${{ github.workspace }}/release/ReleaseNotes.md
           files: |
             aic-sdk-plugin-linux.tar.gz
             aic-sdk-plugin-macos.zip
