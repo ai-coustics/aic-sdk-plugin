@@ -84,15 +84,6 @@ jobs:
   build-windows:
     runs-on: windows-2022
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Configure CMake
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build plugin
-        run: cmake --build build --config Release -j
-
       - name: Install winget
         shell: powershell
         run: |
@@ -102,6 +93,14 @@ jobs:
       - name: Install Inno Setup
         run: winget install --id JRSoftware.InnoSetup -e --silent --accept-source-agreements
 
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build plugin
+        run: cmake --build build --config Release -j
       - name: Create Windows Package
         run: \"%USERPROFILE%\AppData\Local\Programs\Inno Setup 6\iscc.exe\" /O. scripts\windows\installer.icc
 
