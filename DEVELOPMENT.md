@@ -37,5 +37,5 @@ You can find all necessary Linux dependencies of JUCE in [this document](https:/
 If you want to set the license key programmatically, you have to store the key in the following file:
 
 - Linux: `~/.config/aic/aic-sdk-license.txt`
-- macOS: ``
+- macOS: `~/Library/aic/aic-sdk-license.txt`
 - Windows: `C:\Users\<user>\AppData\Roaming\aic\aic-sdk-license.txt`

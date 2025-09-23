@@ -41,6 +41,12 @@ The plugin can be opened in your favorite DAW by the name `ai-coustics Demo`.
 
 When you open the plugin in your DAW for the first time, a license key dialog will pop up. Paste the provided license key in the text input and activate the license. A license key can be acquired by getting in contact with us, and soon you will be able to create your own key in the developer portal.
 
+The license keys are stored in the following files and can be placed there manually as well:
+
+- Linux: `~/.config/aic/aic-sdk-license.txt`
+- macOS: `~/Library/aic/aic-sdk-license.txt`
+- Windows: `C:\Users\<user>\AppData\Roaming\aic\aic-sdk-license.txt`
+
 ---
 
 Feel free to reach out to us if you encounter any issues or need further assistance.
