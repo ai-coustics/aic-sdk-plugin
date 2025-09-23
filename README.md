@@ -11,7 +11,7 @@ Experience our state-of-the-art speech enhancement technology firsthand with the
 The Demo Plugin provides:
 - **Real-time audio processing** with instant A/B comparison
 - **All model variants** available for testing and evaluation
-- **Production-ready C++ code** demonstrating best practices
+- **Integration example** demonstrating best practices
 - **Cross-platform compatibility** (VST3, AU)
 
 ## Installation
