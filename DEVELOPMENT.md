@@ -31,3 +31,11 @@ To build the windows installer you will have to install [Inno Setup](https://jrs
 ### Linux Dependencies
 
 You can find all necessary Linux dependencies of JUCE in [this document](https://github.com/juce-framework/JUCE/blob/master/docs/Linux%20Dependencies.md).
+
+### License Key File
+
+If you want to set the license key programmatically, you have to store the key in the following file:
+
+- Linux: `~/.config/aic/aic-sdk-license.txt`
+- macOS: `~/Library/aic/aic-sdk-license.txt`
+- Windows: `C:\Users\<user>\AppData\Roaming\aic\aic-sdk-license.txt`
