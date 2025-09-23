@@ -162,8 +162,6 @@ class AicSlider : public juce::Slider
             fullBounds.getX() + (int) (ratio * static_cast<float>(fullBounds.getWidth()));
 
         return juce::Point<int>(remappedX, mousePos.y);
-
-        return mousePos; // For rotary sliders, no remapping needed
     }
 
     SliderLnF m_lnf;
