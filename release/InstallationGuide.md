@@ -9,19 +9,21 @@ If you do not have a DAW installed, we recommend installing [REAPER](https://www
 
 1. Start the installer by double-clicking on the `aic-sdk-plugin.pkg` file.
 
-2. The first time you open it, you will see a security warning saying the developer cannot be verified. Click `Cancel` to close this dialog.
+2. The first time you open it, you will see a security warning saying the developer cannot be verified. Click `Done` to close this dialog.
 
 3. Open **System Settings** from the Apple menu or Dock.
 
 4. Click on **Privacy & Security** in the sidebar.
 
-5. Scroll down to the **Security** section. You should see a message about the blocked installer with an **Allow** button next to it. Click **Allow**.
+5. Scroll down to the **Security** section. You should see a message about the blocked installer with an **Open anyways** button next to it. Click **Open anyway**.
 
-6. Double-click the `aic-sdk-plugin.pkg` file again. This time you will see an **Open anyway** button in the security dialog. Click **Open anyway**.
+6. This time in the popup click **Open anyway**.
 
 7. Enter your administrator password when prompted and follow the installer instructions to complete the installation. Once completed, the VST3 and AU plugins will be installed in the default system locations and can be opened in your favorite DAW by the name `ai-coustics Demo`.
 
-([Official Apple Documentation](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unknown-developer-mh40616/mac))
+- [Official Apple Documentation](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unknown-developer-mh40616/mac)
+- AU Location: `Library/Audio/Plug-Ins/Components/ai-coustics Demo.component`
+- VST3 Location: `/Library/Audio/Plug-Ins/VST3/ai-coustics Demo.vst3`
 
 ### Windows
 
