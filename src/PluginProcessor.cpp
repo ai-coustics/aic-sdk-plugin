@@ -107,7 +107,10 @@ void AicDemoAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
 
     initializeModel();
 
-    setLatencySamples((int) m_model->get_output_delay());
+    if (m_model)
+    {
+        setLatencySamples((int) m_model->get_output_delay());
+    }
 }
 
 void AicDemoAudioProcessor::releaseResources()
