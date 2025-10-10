@@ -204,6 +204,7 @@ void LicenseDialog::setupComponents()
         juce::Font(juce::Font::getDefaultSansSerifFontName(), 16.0f, juce::Font::plain));
     m_instructionLabel.setJustificationType(juce::Justification::left);
     m_instructionLabel.setColour(juce::Label::textColourId, aic::ui::BLACK_60);
+    m_instructionLabel.setMinimumHorizontalScale(1.0f); // Prevent text squeezing
     addAndMakeVisible(m_instructionLabel);
 
     m_licenseLabel.setText("License Key", juce::dontSendNotification);
