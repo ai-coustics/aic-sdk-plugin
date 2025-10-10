@@ -257,9 +257,9 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
     std::atomic<bool> m_licenseValid = {false};
 
     size_t            m_activeModelIndex{0};
-    uint32_t          m_currentSampleRate{0};
-    uint16_t          m_currentNumChannels{0};
-    size_t            m_currentNumFrames{0};
+    uint32_t          m_currentSampleRate{48000};
+    uint16_t          m_currentNumChannels{2};
+    size_t            m_currentNumFrames{480};
     std::atomic<bool> m_modelChanged{false};
 
     bool m_modelIsInitialized{false};
