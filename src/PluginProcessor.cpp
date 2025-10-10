@@ -13,7 +13,9 @@ AicDemoAudioProcessor::AicDemoAudioProcessor()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       state(*this, nullptr, "state",
-            {std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"model", 1}, "Model",
+            {std::make_unique<juce::AudioParameterBool>(juce::ParameterID{"bypass", 1}, "Bypass",
+                                                        false),
+             std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"model", 1}, "Model",
                                                           getModelChoices(), 0),
              std::make_unique<juce::AudioParameterFloat>(
                  juce::ParameterID{"enhancement", 1}, "Enhancement Level",
@@ -31,6 +33,7 @@ AicDemoAudioProcessor::AicDemoAudioProcessor()
     if (isLicenseValid())
     {
         createModel(m_activeModelIndex);
+        initializeModel();
     }
 }
 
@@ -106,11 +109,6 @@ void AicDemoAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
     m_currentNumFrames   = static_cast<size_t>(samplesPerBlock);
 
     initializeModel();
-
-    if (m_model)
-    {
-        setLatencySamples((int) m_model->get_output_delay());
-    }
 }
 
 void AicDemoAudioProcessor::releaseResources()
@@ -187,6 +185,9 @@ void AicDemoAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     }
 
     // Set parameters for selected model
+    // m_model->set_parameter(aic::Parameter::Bypass,
+    //                        state.getRawParameterValue("bypass")->load());
+
     m_model->set_parameter(aic::Parameter::EnhancementLevel,
                            state.getRawParameterValue("enhancement")->load());
 

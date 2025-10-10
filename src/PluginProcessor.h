@@ -235,19 +235,20 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
                 m_model->initialize(m_currentSampleRate, m_currentNumChannels, m_currentNumFrames);
             m_modelIsInitialized = errorCode == aic::ErrorCode::Success;
             m_modelChanged.store(true);
+            setLatencySamples((int) m_model->get_output_delay());
         }
     }
 
     // Define all models here
     inline static const std::array<ModelInfo, 8> modelInfos = {
-        {{"Quail L48", aic::ModelType::Quail_L48, 10, 30},
+        {{"Quail L", aic::ModelType::Quail_L48, 10, 30},
+         {"Quail S", aic::ModelType::Quail_S48, 10, 30},
+         {"Quail XS", aic::ModelType::Quail_XS, 10, 10},
+         {"Quail XXS", aic::ModelType::Quail_XXS, 10, 10},
          {"Quail L16", aic::ModelType::Quail_L16, 10, 30},
          {"Quail L8", aic::ModelType::Quail_L8, 10, 30},
-         {"Quail S48", aic::ModelType::Quail_S48, 10, 30},
          {"Quail S16", aic::ModelType::Quail_S16, 10, 30},
-         {"Quail S8", aic::ModelType::Quail_S8, 10, 30},
-         {"Quail XS", aic::ModelType::Quail_XS, 10, 10},
-         {"Quail XXS", aic::ModelType::Quail_XXS, 10, 10}}};
+         {"Quail S8", aic::ModelType::Quail_S8, 10, 30}}};
     static constexpr size_t m_numModels = modelInfos.size();
 
     std::unique_ptr<aic::AicModel> m_model;
