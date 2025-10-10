@@ -1,7 +1,7 @@
 # ai-coustics SDK Demo Plugin
 
 <div align="center">
-    <img src="assets/screenshot.png" alt="Plugin Screenshot" width="50%">
+    <img src="assets/screenshot.png" alt="Plugin Screenshot" width="600">
 </div>
 
 Experience our state-of-the-art speech enhancement technology firsthand with the ai-coustics Demo Plugin - a comprehensive audio plugin that provides instant access to all models in our Speech Enhancement SDK. Built for professional audio workflows, our SDK delivers cutting-edge real-time audio processing that dramatically improves speech clarity, reduces noise, and enhances intelligibility across any audio content.
