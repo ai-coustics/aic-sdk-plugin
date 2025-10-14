@@ -166,11 +166,12 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
                     juce::roundToInt((static_cast<double>(m_model->get_output_delay()) * 1000.0) /
                                      static_cast<double>(m_currentSampleRate))); // ms
 
-                return aic::ui::ModelInfo(static_cast<int>(m_model->get_optimal_sample_rate()),
-                                          modelInfos[m_activeModelIndex].windowLengthMs,
-                                          modelInfos[m_activeModelIndex].modelDelayMs,
-                                          static_cast<int>(m_model->get_optimal_num_frames()),
-                                          outputDelayMs);
+                return aic::ui::ModelInfo(
+                    static_cast<int>(m_model->get_optimal_sample_rate()),
+                    modelInfos[m_activeModelIndex].windowLengthMs,
+                    modelInfos[m_activeModelIndex].modelDelayMs,
+                    static_cast<int>(m_model->get_optimal_num_frames(m_currentSampleRate)),
+                    outputDelayMs);
             }
             else
             {
@@ -231,8 +232,8 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
     {
         if (m_model)
         {
-            auto errorCode =
-                m_model->initialize(m_currentSampleRate, m_currentNumChannels, m_currentNumFrames);
+            auto errorCode       = m_model->initialize(m_currentSampleRate, m_currentNumChannels,
+                                                       m_currentNumFrames, true);
             m_modelIsInitialized = errorCode == aic::ErrorCode::Success;
             m_modelChanged.store(true);
             setLatencySamples((int) m_model->get_output_delay());

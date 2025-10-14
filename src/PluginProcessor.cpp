@@ -185,8 +185,7 @@ void AicDemoAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     }
 
     // Set parameters for selected model
-    // m_model->set_parameter(aic::Parameter::Bypass,
-    //                        state.getRawParameterValue("bypass")->load());
+    m_model->set_parameter(aic::Parameter::Bypass, state.getRawParameterValue("bypass")->load());
 
     m_model->set_parameter(aic::Parameter::EnhancementLevel,
                            state.getRawParameterValue("enhancement")->load());
