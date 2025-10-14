@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(AicSdkPlugin VERSION 0.6.3 LANGUAGES C CXX)
+project(AicSdkPlugin VERSION 0.7.0 LANGUAGES C CXX)
 
 # Export compile commands for vscode, vim, zed etc.
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
@@ -27,7 +27,7 @@ set(AIC_SDK_ALLOW_DOWNLOAD ON CACHE BOOL "Allow download ai-coustics C SDK")
 FetchContent_Declare(
     aic_sdk
     GIT_REPOSITORY https://github.com/ai-coustics/aic-sdk-cpp.git
-    GIT_TAG        0.6.3
+    GIT_TAG        0.7.0
     GIT_SHALLOW    TRUE
 )
 FetchContent_MakeAvailable(aic_sdk)

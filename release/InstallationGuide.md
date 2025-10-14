@@ -75,4 +75,26 @@ You can also place the license key manually in the following file paths:
 
 ---
 
+## Uninstall Plugin
+
+Delete the following folders or files:
+
+### macOS
+
+- `~/Library/aic/`
+- `Library/Audio/Plug-Ins/Components/ai-coustics Demo.component`
+- `Library/Audio/Plug-Ins/VST3/ai-coustics Demo.vst3`
+
+### Windows
+
+- `C:\Users\<user>\AppData\Roaming\aic\`
+- `C:\Program Files\Common Files\VST3\ai-coustics Demo.vst3`
+
+### Linux
+
+- `~/.config/aic/`
+- `~/.vst3/ai-coustics Demo.vst3`
+
+---
+
 If you run into any issues, feel free to reach out to us for support.

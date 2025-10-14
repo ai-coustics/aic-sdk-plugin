@@ -1,7 +1,7 @@
 # ai-coustics SDK Demo Plugin
 
 <div align="center">
-    <img src="assets/screenshot.png" alt="Plugin Screenshot" width="50%">
+    <img src="assets/screenshot.png" alt="Plugin Screenshot" width="600">
 </div>
 
 Experience our state-of-the-art speech enhancement technology firsthand with the ai-coustics Demo Plugin - a comprehensive audio plugin that provides instant access to all models in our Speech Enhancement SDK. Built for professional audio workflows, our SDK delivers cutting-edge real-time audio processing that dramatically improves speech clarity, reduces noise, and enhances intelligibility across any audio content.
@@ -20,25 +20,21 @@ Download the newest release [here](https://github.com/ai-coustics/aic-sdk-plugin
 
 ### Acquire an SDK License Key
 
-To use the SDK, you'll need a license key. Contact our team to receive your time-limited demo key:
+**Important:** You need an **SDK license key**. This is distinct from the API license key used for our cloud API services. To obtain an SDK license key, please contact us at [info@ai-coustics.com](mailto:info@ai-coustics.com).
 
-- **Email**: [info@ai-coustics.com](mailto:info@ai-coustics.com)
-- **Website**: [ai-coustics.com](https://ai-coustics.com)
-
-Once you have your license key, set it as an environment variable or pass it directly to the SDK initialization functions.
+Once you have your license key paste it into the plugin UI when you are asked to.
 
 ## Build your own Application
 
 If you want to integrate the SDK in your application you can use our language bindings:
 
-| Language | Repository | Description |
+| Platform | Repository | Description |
 |----------|------------|-------------|
-| **C** | [`aic-sdk-c`](https://github.com/ai-coustics/aic-sdk-c) | Core C interface and foundation |
-| **C++** | [`aic-sdk-cpp`](https://github.com/ai-coustics/aic-sdk-cpp) | Modern C++ wrapper with RAII and type safety |
-| **Node.js** | [`aic-sdk-node`](https://github.com/ai-coustics/aic-sdk-node) | JavaScript/TypeScript bindings for Node.js |
-| **Python** | [`aic-sdk-py`](https://github.com/ai-coustics/aic-sdk-py) | Pythonic interface |
-| **Rust** | [`aic-sdk-rs`](https://github.com/ai-coustics/aic-sdk-rs) | Safe Rust Bindings |
-| **WebAssembly** | [`aic-sdk-wasm`](https://github.com/ai-coustics/aic-sdk-wasm) | Browser-compatible WebAssembly build |
+| **C++** | [`aic-sdk-cpp`](https://github.com/ai-coustics/aic-sdk-cpp) | Modern C++ interface with RAII and type safety |
+| **JavaScript/TypeScript** | [`aic-sdk-node`](https://github.com/ai-coustics/aic-sdk-node) | Native bindings for Node.js applications |
+| **Python** | [`aic-sdk-py`](https://github.com/ai-coustics/aic-sdk-py) | Idiomatic Python interface |
+| **Rust** | [`aic-sdk-rs`](https://github.com/ai-coustics/aic-sdk-rs) | Safe Rust bindings with zero-cost abstractions |
+| **Web (WASM)** | [`aic-sdk-wasm`](https://github.com/ai-coustics/aic-sdk-wasm) | WebAssembly build for browser applications |
 
 ## Support & Resources
 

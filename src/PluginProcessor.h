@@ -166,11 +166,12 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
                     juce::roundToInt((static_cast<double>(m_model->get_output_delay()) * 1000.0) /
                                      static_cast<double>(m_currentSampleRate))); // ms
 
-                return aic::ui::ModelInfo(static_cast<int>(m_model->get_optimal_sample_rate()),
-                                          modelInfos[m_activeModelIndex].windowLengthMs,
-                                          modelInfos[m_activeModelIndex].modelDelayMs,
-                                          static_cast<int>(m_model->get_optimal_num_frames()),
-                                          outputDelayMs);
+                return aic::ui::ModelInfo(
+                    static_cast<int>(m_model->get_optimal_sample_rate()),
+                    modelInfos[m_activeModelIndex].windowLengthMs,
+                    modelInfos[m_activeModelIndex].modelDelayMs,
+                    static_cast<int>(m_model->get_optimal_num_frames(m_currentSampleRate)),
+                    outputDelayMs);
             }
             else
             {
@@ -231,23 +232,24 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
     {
         if (m_model)
         {
-            auto errorCode =
-                m_model->initialize(m_currentSampleRate, m_currentNumChannels, m_currentNumFrames);
+            auto errorCode       = m_model->initialize(m_currentSampleRate, m_currentNumChannels,
+                                                       m_currentNumFrames, true);
             m_modelIsInitialized = errorCode == aic::ErrorCode::Success;
             m_modelChanged.store(true);
+            setLatencySamples((int) m_model->get_output_delay());
         }
     }
 
     // Define all models here
     inline static const std::array<ModelInfo, 8> modelInfos = {
-        {{"Quail L48", aic::ModelType::Quail_L48, 10, 30},
+        {{"Quail L", aic::ModelType::Quail_L48, 10, 30},
+         {"Quail S", aic::ModelType::Quail_S48, 10, 30},
+         {"Quail XS", aic::ModelType::Quail_XS, 10, 10},
+         {"Quail XXS", aic::ModelType::Quail_XXS, 10, 10},
          {"Quail L16", aic::ModelType::Quail_L16, 10, 30},
          {"Quail L8", aic::ModelType::Quail_L8, 10, 30},
-         {"Quail S48", aic::ModelType::Quail_S48, 10, 30},
          {"Quail S16", aic::ModelType::Quail_S16, 10, 30},
-         {"Quail S8", aic::ModelType::Quail_S8, 10, 30},
-         {"Quail XS", aic::ModelType::Quail_XS, 10, 10},
-         {"Quail XXS", aic::ModelType::Quail_XXS, 10, 10}}};
+         {"Quail S8", aic::ModelType::Quail_S8, 10, 30}}};
     static constexpr size_t m_numModels = modelInfos.size();
 
     std::unique_ptr<aic::AicModel> m_model;
@@ -256,9 +258,9 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
     std::atomic<bool> m_licenseValid = {false};
 
     size_t            m_activeModelIndex{0};
-    uint32_t          m_currentSampleRate{0};
-    uint16_t          m_currentNumChannels{0};
-    size_t            m_currentNumFrames{0};
+    uint32_t          m_currentSampleRate{48000};
+    uint16_t          m_currentNumChannels{2};
+    size_t            m_currentNumFrames{480};
     std::atomic<bool> m_modelChanged{false};
 
     bool m_modelIsInitialized{false};

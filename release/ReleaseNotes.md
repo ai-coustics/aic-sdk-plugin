@@ -1,5 +1,6 @@
 # Release Notes
 
-- This release introduces our new corporate design to the plugin
-- License keys can now be activated directly within the plugin UI
-- A model information panel displays comprehensive details about your selected model
+- Plugin now works in hosts with variable buffer sizes (e.g. Audacity), for the price of a higher output delay
+- Introduced a fix to an issue where the output delay was not reported when switching models during processing
+- Introduced new parameter `Bypass`, which bypasses the enhancement while keeping the processing delay active
+- When the enhancement level is set to 0, the state will be reset automatically before processing continues
