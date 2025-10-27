@@ -13,6 +13,7 @@ enum ModelState
     Initilized,
     WrongAudioSettings,
     LicenseInactive,
+    ProcessingNotAllowed,
 };
 
 struct ModelInfo
@@ -107,6 +108,13 @@ class AicModelInfoBox : public juce::Component
                        juce::Justification::centred);
         }
         break;
+        case ProcessingNotAllowed:
+        {
+            g.setFont(16.f);
+            g.drawText("License server disallowed processing or could not be reached, check dev "
+                       "portal and internet connection...",
+                       bounds, juce::Justification::centred);
+        }
         }
     }
 

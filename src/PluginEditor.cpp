@@ -105,8 +105,15 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
 
     bounds.removeFromTop(24.f);
 
-    m_logo->setTransformToFit(bounds.removeFromTop(20).removeFromLeft(100).toFloat(),
+    auto footer = bounds.removeFromTop(20);
+
+    m_logo->setTransformToFit(footer.removeFromLeft(100).toFloat(),
                               juce::RectanglePlacement::centred);
+
+    g.setColour(aic::ui::BLACK_70);
+    g.setFont(14.f);
+    g.drawText(processorRef.getSdkVersion(), footer.removeFromRight(100), juce::Justification::centredRight);
+
 }
 
 void AicDemoAudioProcessorEditor::resized()
