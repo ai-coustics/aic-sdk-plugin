@@ -81,8 +81,6 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - name: Install Inno Setup
-        run: winget install --id JRSoftware.InnoSetup -e --source winget --silent --accept-source-agreements --accept-package-agreements --disable-interactivity
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Configure CMake
