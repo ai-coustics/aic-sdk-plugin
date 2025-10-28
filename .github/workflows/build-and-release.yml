@@ -87,7 +87,7 @@ jobs:
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build plugin
         run: cmake --build build --config Release -j
-      - name: Create Windows Package
+      - name: Create Windows Installer
         run: |
           Start-Process -FilePath "iscc.exe" -ArgumentList "/Orelease_package scripts\windows\installer.iss" -NoNewWindow -Wait
       - name: Add docs to release package
