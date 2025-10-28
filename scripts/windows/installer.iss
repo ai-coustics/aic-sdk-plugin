@@ -1,6 +1,6 @@
 [Setup]
 AppName="ai-coustics Demo"
-AppVersion=0.6.3
+AppVersion=0.8.0
 DefaultDirName="C:\Program Files\Common Files\"
 DefaultGroupName=aic-sdk-plugin
 OutputBaseFilename=aic-sdk-plugin-windows

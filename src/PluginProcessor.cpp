@@ -197,9 +197,16 @@ void AicDemoAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     m_model->set_parameter(aic::Parameter::NoiseGateEnable,
                            state.getRawParameterValue("noisegateenable")->load());
 
-    m_model->process_planar(buffer.getArrayOfWritePointers(),
-                            static_cast<uint16_t>(totalNumInputChannels),
-                            static_cast<size_t>(buffer.getNumSamples()));
+    auto processing_result = m_model->process_planar(buffer.getArrayOfWritePointers(),
+                                                     static_cast<uint16_t>(totalNumInputChannels),
+                                                     static_cast<size_t>(buffer.getNumSamples()));
+    // update model info box if state of processingNotAllowed changed
+    bool currentProcessingNotAllowed = (processing_result == aic::ErrorCode::EnhancementNotAllowed);
+    if (m_processingNotAllowed != currentProcessingNotAllowed)
+    {
+        m_processingNotAllowed = currentProcessingNotAllowed;
+        m_modelChanged.store(true);
+    }
 }
 
 //==============================================================================

@@ -159,7 +159,11 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
         }
         else
         {
-            if (m_model && m_modelIsInitialized)
+            if (m_processingNotAllowed)
+            {
+                return aic::ui::ModelInfo(aic::ui::ModelState::ProcessingNotAllowed);
+            }
+            else if (m_model && m_modelIsInitialized)
             {
                 // calculate outputDelay in ms
                 auto outputDelayMs = static_cast<int>(
@@ -188,6 +192,11 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
     void acknowledgeModelChanged()
     {
         m_modelChanged.store(false);
+    }
+
+    juce::String getSdkVersion() const
+    {
+        return aic::AicModel::get_sdk_version();
     }
 
   private:
@@ -256,6 +265,8 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
 
     std::string       m_licenseKey;
     std::atomic<bool> m_licenseValid = {false};
+
+    bool m_processingNotAllowed = {false};
 
     size_t            m_activeModelIndex{0};
     uint32_t          m_currentSampleRate{48000};
