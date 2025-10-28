@@ -52,6 +52,9 @@ jobs:
       - name: Build plugin
         run: cmake --build build -j
 
+      - name: Create macOS app installer
+        run: ./scripts/macos/build-installer.sh
+
   test-windows:
     runs-on: windows-latest
     steps:
@@ -64,3 +67,7 @@ jobs:
 
       - name: Build plugin
         run: cmake --build build --config Release
+
+      - name: Create windows installer
+        run: |
+          Start-Process -FilePath "iscc.exe" -ArgumentList "/Orelease_package scripts\windows\installer.iss" -NoNewWindow -Wait

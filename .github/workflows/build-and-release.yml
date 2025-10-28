@@ -87,9 +87,9 @@ jobs:
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build plugin
         run: cmake --build build --config Release -j
-      - name: Create Windows Package
+      - name: Create Windows Installer
         run: |
-          Start -FilePath "$env:USERPROFILE\AppData\Local\Programs\Inno Setup 6\iscc.exe" -ArgumentList "/Orelease_package scripts\windows\installer.iss" -NoNewWindow -Wait
+          Start-Process -FilePath "iscc.exe" -ArgumentList "/Orelease_package scripts\windows\installer.iss" -NoNewWindow -Wait
       - name: Add docs to release package
         run: |
           Copy-Item "release\*" "release_package\"
