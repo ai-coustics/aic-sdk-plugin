@@ -200,10 +200,11 @@ void AicDemoAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     auto processing_result = m_model->process_planar(buffer.getArrayOfWritePointers(),
                                                      static_cast<uint16_t>(totalNumInputChannels),
                                                      static_cast<size_t>(buffer.getNumSamples()));
-    bool processingNotAllowed = (processing_result != aic::ErrorCode::Success);
-    if (m_processingNotAllowed != processingNotAllowed)
+    // update model info box if state of processingNotAllowed changed
+    bool currentProcessingNotAllowed = (processing_result == aic::ErrorCode::EnhancementNotAllowed);
+    if (m_processingNotAllowed != currentProcessingNotAllowed)
     {
-        m_processingNotAllowed = processingNotAllowed;
+        m_processingNotAllowed = currentProcessingNotAllowed;
         m_modelChanged.store(true);
     }
 }
