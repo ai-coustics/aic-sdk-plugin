@@ -113,7 +113,8 @@ class AicModelInfoBox : public juce::Component
             g.setFont(16.f);
             g.drawText("Processing not allowed.", bounds, juce::Justification::centred);
             bounds.removeFromTop(30);
-            g.drawText("Check your license and internet connection.", bounds, juce::Justification::centred);
+            g.drawText("Check your license and internet connection.", bounds,
+                       juce::Justification::centred);
         }
         }
     }

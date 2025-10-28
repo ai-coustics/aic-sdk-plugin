@@ -112,8 +112,8 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
 
     g.setColour(aic::ui::BLACK_70);
     g.setFont(14.f);
-    g.drawText(processorRef.getSdkVersion(), footer.removeFromRight(100), juce::Justification::centredRight);
-
+    g.drawText(processorRef.getSdkVersion(), footer.removeFromRight(100),
+               juce::Justification::centredRight);
 }
 
 void AicDemoAudioProcessorEditor::resized()
