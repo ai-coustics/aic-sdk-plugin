@@ -20,9 +20,9 @@ Download the newest release [here](https://github.com/ai-coustics/aic-sdk-plugin
 
 ### Generate your SDK License Key
 
-To use this SDK, you'll need to generate an **SDK license key** from our [Development Portal](https://developers.ai-coustics.io).
+To use this Plugin, you'll need to generate an **SDK license key** from our [Development Portal](https://developers.ai-coustics.io).
 
-**Please note:** The SDK license key is different from our cloud API product. If you have an API license key for our cloud services, it won't work with the SDK - you'll need to create a separate SDK license key in the portal.
+**Please note:** The SDK license key is different from our cloud API product. If you have an API license key for our cloud services, it won't work with the Plugin - you'll need to create a separate SDK license key in the portal.
 
 ## Build your own Application
 
