@@ -111,9 +111,9 @@ class AicModelInfoBox : public juce::Component
         case ProcessingNotAllowed:
         {
             g.setFont(16.f);
-            g.drawText("License server disallowed processing or could not be reached, check dev "
-                       "portal and internet connection...",
-                       bounds, juce::Justification::centred);
+            g.drawText("Processing not allowed.", bounds, juce::Justification::centred);
+            bounds.removeFromTop(30);
+            g.drawText("Check your license and internet connection.", bounds, juce::Justification::centred);
         }
         }
     }
