@@ -18,11 +18,11 @@ The Demo Plugin provides:
 
 Download the newest release [here](https://github.com/ai-coustics/aic-sdk-plugin/releases) and follow the instructions in the [InstallationGuide.md](release/InstallationGuide.md).
 
-### Acquire an SDK License Key
+### Generate your SDK License Key
 
-**Important:** You need an **SDK license key**. This is distinct from the API license key used for our cloud API services. To obtain an SDK license key, please contact us at [info@ai-coustics.com](mailto:info@ai-coustics.com).
+To use this SDK, you'll need to generate an **SDK license key** from our [Development Portal](https://developers.ai-coustics.io).
 
-Once you have your license key paste it into the plugin UI when you are asked to.
+**Please note:** The SDK license key is different from our cloud API product. If you have an API license key for our cloud services, it won't work with the SDK - you'll need to create a separate SDK license key in the portal.
 
 ## Build your own Application
 
@@ -31,9 +31,9 @@ If you want to integrate the SDK in your application you can use our language bi
 | Platform | Repository | Description |
 |----------|------------|-------------|
 | **C++** | [`aic-sdk-cpp`](https://github.com/ai-coustics/aic-sdk-cpp) | Modern C++ interface with RAII and type safety |
-| **JavaScript/TypeScript** | [`aic-sdk-node`](https://github.com/ai-coustics/aic-sdk-node) | Native bindings for Node.js applications |
 | **Python** | [`aic-sdk-py`](https://github.com/ai-coustics/aic-sdk-py) | Idiomatic Python interface |
 | **Rust** | [`aic-sdk-rs`](https://github.com/ai-coustics/aic-sdk-rs) | Safe Rust bindings with zero-cost abstractions |
+| **JavaScript/TypeScript** | [`aic-sdk-node`](https://github.com/ai-coustics/aic-sdk-node) | Native bindings for Node.js applications |
 | **Web (WASM)** | [`aic-sdk-wasm`](https://github.com/ai-coustics/aic-sdk-wasm) | WebAssembly build for browser applications |
 
 ## Support & Resources
