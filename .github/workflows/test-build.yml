@@ -40,7 +40,7 @@ jobs:
         run: cmake --build build -j
 
   test-macos:
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -53,7 +53,7 @@ jobs:
         run: cmake --build build -j
 
   test-windows:
-    runs-on: windows-2022
+    runs-on: windows-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
