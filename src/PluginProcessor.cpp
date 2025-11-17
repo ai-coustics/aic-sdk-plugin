@@ -185,16 +185,16 @@ void AicDemoAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     }
 
     // Set parameters for selected model
-    m_model->set_parameter(aic::Parameter::Bypass, state.getRawParameterValue("bypass")->load());
+    m_model->set_parameter(aic::EnhancementParameter::Bypass, state.getRawParameterValue("bypass")->load());
 
-    m_model->set_parameter(aic::Parameter::EnhancementLevel,
+    m_model->set_parameter(aic::EnhancementParameter::EnhancementLevel,
                            state.getRawParameterValue("enhancement")->load());
 
     m_model->set_parameter(
-        aic::Parameter::VoiceGain,
+        aic::EnhancementParameter::VoiceGain,
         juce::Decibels::decibelsToGain(state.getRawParameterValue("voicegain")->load()));
 
-    m_model->set_parameter(aic::Parameter::NoiseGateEnable,
+    m_model->set_parameter(aic::EnhancementParameter::NoiseGateEnable,
                            state.getRawParameterValue("noisegateenable")->load());
 
     auto processing_result = m_model->process_planar(buffer.getArrayOfWritePointers(),
