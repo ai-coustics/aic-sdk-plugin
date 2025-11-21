@@ -23,8 +23,13 @@ AicDemoAudioProcessor::AicDemoAudioProcessor()
              std::make_unique<juce::AudioParameterFloat>(
                  juce::ParameterID{"voicegain", 1}, "Voice Gain",
                  juce::NormalisableRange<float>(-12.0f, 12.0f), 1.0f),
-             std::make_unique<juce::AudioParameterBool>(juce::ParameterID{"noisegateenable", 0},
-                                                        "Noise Gate Enable", false)})
+             std::make_unique<juce::AudioParameterFloat>(
+                 juce::ParameterID{"vad_loopback", 1}, "VAD Loopback Buffer Size",
+                 juce::NormalisableRange<float>(1.0f, 20.0f), 6.0f),
+             std::make_unique<juce::AudioParameterFloat>(
+                 juce::ParameterID{"vad_sensitivity", 1}, "VAD Sensitivity",
+                 juce::NormalisableRange<float>(1.0f, 15.0f), 6.0f)
+})
 {
     // Load and validate license key
     loadAndValidateLicense();
@@ -185,17 +190,15 @@ void AicDemoAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     }
 
     // Set parameters for selected model
-    m_model->set_parameter(aic::Parameter::Bypass, state.getRawParameterValue("bypass")->load());
-
-    m_model->set_parameter(aic::Parameter::EnhancementLevel,
+    m_model->set_parameter(aic::EnhancementParameter::Bypass, state.getRawParameterValue("bypass")->load());
+    m_model->set_parameter(aic::EnhancementParameter::EnhancementLevel,
                            state.getRawParameterValue("enhancement")->load());
-
     m_model->set_parameter(
-        aic::Parameter::VoiceGain,
+        aic::EnhancementParameter::VoiceGain,
         juce::Decibels::decibelsToGain(state.getRawParameterValue("voicegain")->load()));
 
-    m_model->set_parameter(aic::Parameter::NoiseGateEnable,
-                           state.getRawParameterValue("noisegateenable")->load());
+    m_vad->set_parameter(aic::VadParameter::LookbackBufferSize,state.getRawParameterValue("vad_loopback")->load());
+    m_vad->set_parameter(aic::VadParameter::Sensitivity,state.getRawParameterValue("vad_sensitivity")->load());
 
     auto processing_result = m_model->process_planar(buffer.getArrayOfWritePointers(),
                                                      static_cast<uint16_t>(totalNumInputChannels),

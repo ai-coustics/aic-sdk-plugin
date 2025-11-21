@@ -199,6 +199,19 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
         return aic::AicModel::get_sdk_version();
     }
 
+    bool isSpeechDetected() const
+    {
+        if (m_vad)
+        {
+            // this is safe to call from UI thread
+            return m_vad->is_speech_detected();
+        }
+        else
+        {
+            return false;
+        }
+    }
+
   private:
     /**
      * @brief Creates a new model instance with the current license key.
@@ -228,6 +241,16 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
         {
             m_licenseValid.store(true);
             m_model = std::move(model);
+            // create VAD
+            auto [vad, errorCodeVad] = aic::AicVad::create(*m_model);
+            if (vad && errorCodeVad == aic::ErrorCode::Success)
+            {
+                m_vad = std::move(vad);
+            }
+            else
+            {
+                m_vad = nullptr;
+            }
         }
         else
         {
@@ -250,11 +273,12 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
     }
 
     // Define all models here
-    inline static const std::array<ModelInfo, 8> modelInfos = {
+    inline static const std::array<ModelInfo, 9> modelInfos = {
         {{"Quail L", aic::ModelType::Quail_L48, 10, 30},
          {"Quail S", aic::ModelType::Quail_S48, 10, 30},
          {"Quail XS", aic::ModelType::Quail_XS, 10, 10},
          {"Quail XXS", aic::ModelType::Quail_XXS, 10, 10},
+         {"Quail STT", aic::ModelType::Quail_STT, 10, 30},
          {"Quail L16", aic::ModelType::Quail_L16, 10, 30},
          {"Quail L8", aic::ModelType::Quail_L8, 10, 30},
          {"Quail S16", aic::ModelType::Quail_S16, 10, 30},
@@ -262,6 +286,7 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
     static constexpr size_t m_numModels = modelInfos.size();
 
     std::unique_ptr<aic::AicModel> m_model;
+    std::unique_ptr<aic::AicVad>   m_vad;
 
     std::string       m_licenseKey;
     std::atomic<bool> m_licenseValid = {false};

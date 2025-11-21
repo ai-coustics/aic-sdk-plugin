@@ -1,6 +1,7 @@
 # Release Notes
 
-- Plugin now works in hosts with variable buffer sizes (e.g. Audacity), for the price of a higher output delay
-- Introduced a fix to an issue where the output delay was not reported when switching models during processing
-- Introduced new parameter `Bypass`, which bypasses the enhancement while keeping the processing delay active
-- When the enhancement level is set to 0, the state will be reset automatically before processing continues
+- Updated SDK to version 0.10.0 [SDK Release Notes](https://github.com/ai-coustics/aic-sdk-c/blob/docs/0.10.0/release-notes.md)
+- Added specialized `Quail STT` model optimized for speech-to-text scenarios
+- Voice Activity Detection (VAD) information is now displayed in the user interface
+- Added plugin parameters `VAD Loopback Buffer Size` and `VAD Sensitivity` to configure Voice Activity Detection behavior. For more information, see the [SDK reference documentation](https://github.com/ai-coustics/aic-sdk-c/blob/docs/0.10.0/sdk-reference.md#aicvadparameter)
+- Removed the `Enable Noise Gate` parameter

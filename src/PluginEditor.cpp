@@ -65,7 +65,7 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize(454, 468);
+    setSize(454, 512);
 }
 
 AicDemoAudioProcessorEditor::~AicDemoAudioProcessorEditor()
@@ -98,6 +98,7 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
 
     bounds.removeFromTop(24.f);
 
+    g.setColour(aic::ui::BLACK_70);
     g.setFont(16.f);
     g.drawText("Enhancement Level", bounds.removeFromTop(24), juce::Justification::centredLeft);
 
@@ -105,6 +106,35 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
 
     bounds.removeFromTop(24.f);
 
+    // Voice Activity Detection
+    auto vadArea = bounds.removeFromTop(20);
+    g.setColour(aic::ui::BLACK_70);
+    g.setFont(16.f);
+    g.drawText("Voice Activity Detection", vadArea, juce::Justification::centredLeft);
+
+    // VAD indicator circle on the right
+    const float circleSize = 20.0f;
+    auto circleArea = vadArea.removeFromRight(static_cast<int>(circleSize));
+    auto circleBounds = circleArea.toFloat().withSizeKeepingCentre(circleSize, circleSize);
+
+    if (m_speechDetected)
+    {
+        g.setColour(aic::ui::ROSA_SHADE);
+        g.fillEllipse(circleBounds);
+        g.setColour(aic::ui::ROSA_TINT);
+        g.fillEllipse(circleBounds.reduced(3.f));
+    }
+    else
+    {
+        g.setColour(aic::ui::BLACK_20);
+        g.fillEllipse(circleBounds);
+        g.setColour(aic::ui::BLACK_0);
+        g.fillEllipse(circleBounds.reduced(3.f));
+    }
+
+    bounds.removeFromTop(24.f);
+
+    // Footer
     auto footer = bounds.removeFromTop(20);
 
     m_logo->setTransformToFit(footer.removeFromLeft(100).toFloat(),
@@ -149,6 +179,12 @@ void AicDemoAudioProcessorEditor::timerCallback()
     {
         processorRef.acknowledgeModelChanged();
         updateModelInfo();
+    }
+
+    bool speechDetected = processorRef.isSpeechDetected();
+    if (speechDetected != m_speechDetected) {
+        m_speechDetected = speechDetected;
+        repaint();
     }
 }
 

@@ -45,6 +45,8 @@ class AicDemoAudioProcessorEditor final : public juce::AudioProcessorEditor, pub
     juce::TextButton                m_licenseButton;
     std::unique_ptr<juce::Drawable> m_logo;
 
+    bool m_speechDetected;
+
     // Modal overlay component for dimming background when dialog is shown
     class ModalOverlay : public juce::Component
     {
