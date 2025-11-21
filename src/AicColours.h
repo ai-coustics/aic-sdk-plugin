@@ -15,4 +15,7 @@ const auto BLACK_100 = juce::Colour(0xFF1A1919);
 const auto BLUE_10   = juce::Colour(0xFFEEF3FF);
 const auto BLUE_50   = juce::Colour(0xFF006FFF);
 const auto ROSA_TINT = juce::Colour(0xFFFEEAE9);
+const auto ROSA = juce::Colour(0xFFFED6D4);
+const auto ROSA_SHADE = juce::Colour(0xFFF4BFBD);
+const auto RED_50 = juce::Colour(0xFFFF0022);
 } // namespace aic::ui
