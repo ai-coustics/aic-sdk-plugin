@@ -1,6 +1,5 @@
 # Release Notes
 
-- Plugin now works in hosts with variable buffer sizes (e.g. Audacity), for the price of a higher output delay
-- Introduced a fix to an issue where the output delay was not reported when switching models during processing
-- Introduced new parameter `Bypass`, which bypasses the enhancement while keeping the processing delay active
-- When the enhancement level is set to 0, the state will be reset automatically before processing continues
+- Updated SDK to version 0.10.0
+- Voice Activity Detection (VAD) information is now displayed in the user interface
+- Added specialized QuailSTT model optimized for speech-to-text scenarios
