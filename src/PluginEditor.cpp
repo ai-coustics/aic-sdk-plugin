@@ -121,7 +121,7 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
     {
         g.setColour(aic::ui::ROSA_SHADE);
         g.fillEllipse(circleBounds);
-        g.setColour(aic::ui::ROSA);
+        g.setColour(aic::ui::ROSA_TINT);
         g.fillEllipse(circleBounds.reduced(3.f));
     }
     else
