@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <memory>
 
 //==============================================================================
 AicDemoAudioProcessor::AicDemoAudioProcessor()
@@ -22,9 +23,7 @@ AicDemoAudioProcessor::AicDemoAudioProcessor()
                  juce::NormalisableRange<float>(0.0f, 1.0f), 1.0f),
              std::make_unique<juce::AudioParameterFloat>(
                  juce::ParameterID{"voicegain", 1}, "Voice Gain",
-                 juce::NormalisableRange<float>(-12.0f, 12.0f), 1.0f),
-             std::make_unique<juce::AudioParameterBool>(juce::ParameterID{"noisegateenable", 0},
-                                                        "Noise Gate Enable", false)})
+                 juce::NormalisableRange<float>(-12.0f, 12.0f), 1.0f)})
 {
     // Load and validate license key
     loadAndValidateLicense();
@@ -193,9 +192,6 @@ void AicDemoAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     m_model->set_parameter(
         aic::EnhancementParameter::VoiceGain,
         juce::Decibels::decibelsToGain(state.getRawParameterValue("voicegain")->load()));
-
-    m_model->set_parameter(aic::EnhancementParameter::NoiseGateEnable,
-                           state.getRawParameterValue("noisegateenable")->load());
 
     auto processing_result = m_model->process_planar(buffer.getArrayOfWritePointers(),
                                                      static_cast<uint16_t>(totalNumInputChannels),

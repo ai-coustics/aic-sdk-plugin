@@ -114,6 +114,17 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
     g.setFont(14.f);
     g.drawText(processorRef.getSdkVersion(), footer.removeFromRight(100),
                juce::Justification::centredRight);
+
+    // VAD Box
+    if (m_speechDetected)
+    {
+        auto vadBox = footer.withSizeKeepingCentre(40.0, footer.getHeight());
+        g.setColour(aic::ui::ROSA_TINT);
+        g.drawRoundedRectangle(vadBox.toFloat(), 4.0f, 2.0f);
+        g.setColour(aic::ui::BLACK_70);
+        g.setFont(14.f);
+        g.drawText("VAD", vadBox, juce::Justification::centred);
+    }
 }
 
 void AicDemoAudioProcessorEditor::resized()
@@ -149,6 +160,12 @@ void AicDemoAudioProcessorEditor::timerCallback()
     {
         processorRef.acknowledgeModelChanged();
         updateModelInfo();
+    }
+
+    bool speechDetected = processorRef.isSpeechDetected();
+    if (speechDetected != m_speechDetected) {
+        m_speechDetected = speechDetected;
+        repaint();
     }
 }
 
