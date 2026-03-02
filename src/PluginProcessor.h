@@ -3,19 +3,24 @@
 #include "AicModelInfoBox.h"
 #include "juce_core/juce_core.h"
 
-#include <aic.h>
 #include <aic.hpp>
-#include <array>
+#include <atomic>
 #include <cassert>
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <memory>
+#include <optional>
 
-// Struct to hold model information
-struct ModelInfo
+struct ProcessorBundle
 {
-    const char*    name;
-    aic::ModelType modelType;
-    int            windowLengthMs;
-    int            modelDelayMs;
+    aic::Processor        processor;
+    aic::ProcessorContext  context;
+    aic::VadContext        vadContext;
+    bool                  initialized = false;
+
+    ProcessorBundle(aic::Processor p, aic::ProcessorContext c, aic::VadContext v)
+        : processor(std::move(p)), context(std::move(c)), vadContext(std::move(v))
+    {
+    }
 };
 
 //==============================================================================
@@ -24,7 +29,7 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
   public:
     //==============================================================================
     AicDemoAudioProcessor();
-    ~AicDemoAudioProcessor() override = default;
+    ~AicDemoAudioProcessor() override;
 
     //==============================================================================
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
@@ -59,22 +64,10 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 
-    const juce::StringArray getModelChoices() const
-    {
-        juce::StringArray choices;
-        for (const auto& modelInfo : modelInfos)
-        {
-            choices.add(modelInfo.name);
-        }
-        return choices;
-    }
-
     juce::AudioProcessorValueTreeState state;
 
     /**
      * @brief Checks if the current license key is valid.
-     *
-     * @return true if the license is valid and models can be created, false otherwise
      */
     bool isLicenseValid() const
     {
@@ -83,8 +76,6 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
 
     /**
      * @brief Gets the expected path for the license file.
-     *
-     * @return String containing the full path to the expected license file location
      */
     juce::String getExpectedLicensePath()
     {
@@ -98,8 +89,6 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
 
     /**
      * @brief Gets the license file object.
-     *
-     * @return File object pointing to the license file location
      */
     juce::File getLicenseFile()
     {
@@ -112,76 +101,87 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
     }
 
     /**
-     * @brief Validates a license key by attempting to create a model with it.
-     *
-     * This method tests the provided license key by creating a temporary model
-     * and checking if the creation succeeds.
-     *
-     * @param licenseKey The license key to validate
-     * @return true if the license key is valid and can create models, false otherwise
+     * @brief Validates a license key by attempting to create a processor with it.
      */
     bool validateLicenseKey(const juce::String& licenseKey);
 
     /**
      * @brief Saves a license key to the application's license file.
-     *
-     * Creates the necessary directory structure if it doesn't exist and
-     * saves the license key to the standard location.
-     *
-     * @param licenseKey The license key to save
-     * @return true if the license was saved successfully, false otherwise
      */
     bool saveLicenseKey(const juce::String& licenseKey);
 
     /**
      * @brief Loads and validates the license key from the application directory.
-     *
-     * Attempts to load the license key from the standard location and validate it.
-     * Updates the internal license state accordingly.
-     *
-     * @return true if a valid license was found and loaded, false otherwise
      */
     bool loadAndValidateLicense();
 
     /**
-     * @brief Forces recreation of the current model with the updated license.
-     *
-     * This method should be called after a license change to ensure the model
-     * is recreated with the new license key and properly initialized.
+     * @brief Forces recreation of the current processor with the updated license.
      */
     void forceModelRecreation();
 
+    /**
+     * @brief Loads a model from a file path and creates the processor pipeline.
+     *
+     * This creates the Model, Processor, ProcessorContext, and VadContext
+     * on the message thread, and posts them as pending for the audio thread.
+     *
+     * @param path Full path to the model file
+     * @return true if the model was loaded and processor created successfully
+     */
+    bool loadModel(const juce::String& path);
+
+    /**
+     * @brief Gets the current model file path.
+     */
+    juce::String getModelPath() const
+    {
+        return m_modelPath;
+    }
+
+    /**
+     * @brief Whether a model is currently loaded and active.
+     */
+    bool isModelLoaded() const
+    {
+        return m_active != nullptr && m_active->initialized;
+    }
+
     aic::ui::ModelInfo getModelInfo() const
     {
-        if (!m_licenseValid)
+        if (!m_licenseValid && m_licenseKey.empty())
         {
             return aic::ui::ModelInfo(aic::ui::ModelState::LicenseInactive);
         }
-        else
-        {
-            if (m_processingNotAllowed)
-            {
-                return aic::ui::ModelInfo(aic::ui::ModelState::ProcessingNotAllowed);
-            }
-            else if (m_model && m_modelIsInitialized)
-            {
-                // calculate outputDelay in ms
-                auto outputDelayMs = static_cast<int>(
-                    juce::roundToInt((static_cast<double>(m_model->get_output_delay()) * 1000.0) /
-                                     static_cast<double>(m_currentSampleRate))); // ms
 
-                return aic::ui::ModelInfo(
-                    static_cast<int>(m_model->get_optimal_sample_rate()),
-                    modelInfos[m_activeModelIndex].windowLengthMs,
-                    modelInfos[m_activeModelIndex].modelDelayMs,
-                    static_cast<int>(m_model->get_optimal_num_frames(m_currentSampleRate)),
-                    outputDelayMs);
+        if (!m_active || !m_active->initialized)
+        {
+            if (m_modelPath.isEmpty())
+            {
+                return aic::ui::ModelInfo(aic::ui::ModelState::NoModelLoaded);
             }
             else
             {
                 return aic::ui::ModelInfo(aic::ui::ModelState::WrongAudioSettings);
             }
         }
+
+        if (m_processingNotAllowed)
+        {
+            return aic::ui::ModelInfo(aic::ui::ModelState::ProcessingNotAllowed);
+        }
+
+        auto outputDelay   = m_active->context.get_output_delay();
+        auto outputDelayMs = static_cast<int>(
+            juce::roundToInt((static_cast<double>(outputDelay) * 1000.0) /
+                              static_cast<double>(m_currentSampleRate)));
+
+        auto modelId       = m_model ? m_model->get_id() : std::string("Unknown");
+        auto optimalSr     = m_model ? static_cast<int>(m_model->get_optimal_sample_rate()) : 0;
+        auto optimalFrames =
+            m_model ? static_cast<int>(m_model->get_optimal_num_frames(m_currentSampleRate)) : 0;
+
+        return aic::ui::ModelInfo(modelId, optimalSr, optimalFrames, outputDelayMs);
     }
 
     bool modelChanged() const
@@ -196,110 +196,40 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
 
     juce::String getSdkVersion() const
     {
-        return aic::AicModel::get_sdk_version();
+        return aic::get_sdk_version();
     }
 
     bool isSpeechDetected() const
     {
-        if (m_vad)
+        if (m_active && m_active->initialized)
         {
-            // this is safe to call from UI thread
-            return m_vad->is_speech_detected();
+            return m_active->vadContext.is_speech_detected();
         }
-        else
-        {
-            return false;
-        }
+        return false;
     }
 
   private:
-    /**
-     * @brief Creates a new model instance with the current license key.
-     *
-     * Attempts to create a model of the specified type using the currently
-     * stored license key. Updates the license validity state based on whether
-     * model creation succeeds.
-     *
-     * @param index Index of the model type to create (will be clamped to valid range)
-     */
-    void createModel(size_t index)
-    {
-        index = static_cast<size_t>(
-            juce::jlimit(0, static_cast<int>(m_numModels - 1), static_cast<int>(index)));
+    // Active processor bundle — used on audio thread only
+    std::unique_ptr<ProcessorBundle> m_active;
 
-        // Only attempt to create model if we have a license key
-        if (m_licenseKey.empty())
-        {
-            m_licenseValid.store(false);
-            m_model              = nullptr;
-            m_modelIsInitialized = false;
-            return;
-        }
+    // Pending processor bundle — set on message thread, picked up on audio thread
+    std::atomic<ProcessorBundle*> m_pending{nullptr};
 
-        auto [model, errorCode] = aic::AicModel::create(modelInfos[index].modelType, m_licenseKey);
-        if (model && errorCode == aic::ErrorCode::Success)
-        {
-            m_licenseValid.store(true);
-            m_model = std::move(model);
-            // create VAD
-            auto [vad, errorCodeVad] = aic::AicVad::create(*m_model);
-            if (vad && errorCodeVad == aic::ErrorCode::Success)
-            {
-                m_vad = std::move(vad);
-            }
-            else
-            {
-                m_vad = nullptr;
-            }
-        }
-        else
-        {
-            m_licenseValid.store(false);
-            m_model              = nullptr;
-            m_modelIsInitialized = false;
-        }
-    }
+    // Model object — kept alive for the lifetime of the processor
+    std::optional<aic::Model> m_model;
 
-    void initializeModel()
-    {
-        if (m_model)
-        {
-            auto errorCode       = m_model->initialize(m_currentSampleRate, m_currentNumChannels,
-                                                       m_currentNumFrames, true);
-            m_modelIsInitialized = errorCode == aic::ErrorCode::Success;
-            m_modelChanged.store(true);
-            setLatencySamples((int) m_model->get_output_delay());
-        }
-    }
-
-    // Define all models here
-    inline static const std::array<ModelInfo, 9> modelInfos = {
-        {{"Quail L", aic::ModelType::Quail_L48, 10, 30},
-         {"Quail S", aic::ModelType::Quail_S48, 10, 30},
-         {"Quail XS", aic::ModelType::Quail_XS, 10, 10},
-         {"Quail XXS", aic::ModelType::Quail_XXS, 10, 10},
-         {"Quail STT", aic::ModelType::Quail_STT, 10, 30},
-         {"Quail L16", aic::ModelType::Quail_L16, 10, 30},
-         {"Quail L8", aic::ModelType::Quail_L8, 10, 30},
-         {"Quail S16", aic::ModelType::Quail_S16, 10, 30},
-         {"Quail S8", aic::ModelType::Quail_S8, 10, 30}}};
-    static constexpr size_t m_numModels = modelInfos.size();
-
-    std::unique_ptr<aic::AicModel> m_model;
-    std::unique_ptr<aic::AicVad>   m_vad;
+    // Current model file path
+    juce::String m_modelPath;
 
     std::string       m_licenseKey;
     std::atomic<bool> m_licenseValid = {false};
 
     bool m_processingNotAllowed = {false};
 
-    size_t            m_activeModelIndex{0};
     uint32_t          m_currentSampleRate{48000};
     uint16_t          m_currentNumChannels{2};
     size_t            m_currentNumFrames{480};
     std::atomic<bool> m_modelChanged{false};
-
-    bool m_modelIsInitialized{false};
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AicDemoAudioProcessor)

@@ -15,16 +15,11 @@ AicDemoAudioProcessor::AicDemoAudioProcessor()
       state(*this, nullptr, "state",
             {std::make_unique<juce::AudioParameterBool>(juce::ParameterID{"bypass", 1}, "Bypass",
                                                         false),
-             std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"model", 1}, "Model",
-                                                          getModelChoices(), 0),
              std::make_unique<juce::AudioParameterFloat>(
                  juce::ParameterID{"enhancement", 1}, "Enhancement Level",
                  juce::NormalisableRange<float>(0.0f, 1.0f), 1.0f),
              std::make_unique<juce::AudioParameterFloat>(
-                 juce::ParameterID{"voicegain", 1}, "Voice Gain",
-                 juce::NormalisableRange<float>(-12.0f, 12.0f), 1.0f),
-             std::make_unique<juce::AudioParameterFloat>(
-                 juce::ParameterID{"vad_loopback", 1}, "VAD Loopback Buffer Size",
+                 juce::ParameterID{"vad_loopback", 1}, "VAD Speech Hold Duration",
                  juce::NormalisableRange<float>(1.0f, 20.0f), 6.0f),
              std::make_unique<juce::AudioParameterFloat>(
                  juce::ParameterID{"vad_sensitivity", 1}, "VAD Sensitivity",
@@ -33,13 +28,12 @@ AicDemoAudioProcessor::AicDemoAudioProcessor()
 {
     // Load and validate license key
     loadAndValidateLicense();
+}
 
-    // Only create model if license is valid
-    if (isLicenseValid())
-    {
-        createModel(m_activeModelIndex);
-        initializeModel();
-    }
+AicDemoAudioProcessor::~AicDemoAudioProcessor()
+{
+    // Clean up any pending bundle that was never picked up
+    delete m_pending.exchange(nullptr);
 }
 
 //==============================================================================
@@ -113,19 +107,22 @@ void AicDemoAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
     m_currentNumChannels = static_cast<uint16_t>(getTotalNumInputChannels());
     m_currentNumFrames   = static_cast<size_t>(samplesPerBlock);
 
-    initializeModel();
+    // Rebuild processor pipeline at new audio settings
+    if (!m_modelPath.isEmpty() && isLicenseValid())
+    {
+        loadModel(m_modelPath);
+    }
 }
 
 void AicDemoAudioProcessor::releaseResources()
 {
-    // Models will be automatically destroyed when unique_ptrs go out of scope
 }
 
 void AicDemoAudioProcessor::reset()
 {
-    if (m_model)
+    if (m_active && m_active->initialized)
     {
-        m_model->reset();
+        m_active->context.reset();
     }
 }
 
@@ -161,49 +158,40 @@ void AicDemoAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // Get parameter values in a real-time safe way
-    auto modelParameterValue = state.getRawParameterValue("model");
-
-    // Convert model parameter to index
-    size_t modelIndex = static_cast<size_t>(modelParameterValue->load());
-
-    // update model if model changed
-    if (m_activeModelIndex != modelIndex)
+    // Check for pending processor swap
+    auto* pending = m_pending.exchange(nullptr);
+    if (pending)
     {
-        m_activeModelIndex = modelIndex;
-        // Only create model if we have a valid license
-        if (isLicenseValid())
+        m_active.reset(pending);
+        if (m_active->initialized)
         {
-            /// This is not real-time safe and will lead to clicks.
-            /// Though we want to show the RAM usage of each model and they are not meant to be
-            /// changed in real-time. When loading all models prior, the RAM usage is way higher
-            /// than necessary.
-            createModel(m_activeModelIndex);
-            initializeModel();
+            setLatencySamples(static_cast<int>(m_active->context.get_output_delay()));
         }
     }
 
-    if (!m_model || !m_modelIsInitialized || !isLicenseValid())
+    if (!m_active || !m_active->initialized || !isLicenseValid())
     {
-        // Model is nullptr, not running, or license invalid - audio passes through unchanged
+        // No processor available - audio passes through unchanged
         return;
     }
 
-    // Set parameters for selected model
-    m_model->set_parameter(aic::EnhancementParameter::Bypass, state.getRawParameterValue("bypass")->load());
-    m_model->set_parameter(aic::EnhancementParameter::EnhancementLevel,
-                           state.getRawParameterValue("enhancement")->load());
-    m_model->set_parameter(
-        aic::EnhancementParameter::VoiceGain,
-        juce::Decibels::decibelsToGain(state.getRawParameterValue("voicegain")->load()));
+    // Set parameters via context
+    m_active->context.set_parameter(aic::ProcessorParameter::Bypass,
+                                    state.getRawParameterValue("bypass")->load());
+    m_active->context.set_parameter(aic::ProcessorParameter::EnhancementLevel,
+                                    state.getRawParameterValue("enhancement")->load());
 
-    m_vad->set_parameter(aic::VadParameter::LookbackBufferSize,state.getRawParameterValue("vad_loopback")->load());
-    m_vad->set_parameter(aic::VadParameter::Sensitivity,state.getRawParameterValue("vad_sensitivity")->load());
+    // VAD parameters
+    m_active->vadContext.set_parameter(aic::VadParameter::SpeechHoldDuration,
+                                       state.getRawParameterValue("vad_loopback")->load());
+    m_active->vadContext.set_parameter(aic::VadParameter::Sensitivity,
+                                       state.getRawParameterValue("vad_sensitivity")->load());
 
-    auto processing_result = m_model->process_planar(buffer.getArrayOfWritePointers(),
-                                                     static_cast<uint16_t>(totalNumInputChannels),
-                                                     static_cast<size_t>(buffer.getNumSamples()));
-    // update model info box if state of processingNotAllowed changed
+    auto processing_result = m_active->processor.process_planar(
+        buffer.getArrayOfWritePointers(), static_cast<uint16_t>(totalNumInputChannels),
+        static_cast<size_t>(buffer.getNumSamples()));
+
+    // Update model info box if state of processingNotAllowed changed
     bool currentProcessingNotAllowed = (processing_result == aic::ErrorCode::EnhancementNotAllowed);
     if (m_processingNotAllowed != currentProcessingNotAllowed)
     {
@@ -226,16 +214,25 @@ juce::AudioProcessorEditor* AicDemoAudioProcessor::createEditor()
 //==============================================================================
 void AicDemoAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
-    // Store an XML representation of our state
+    // Store model path in the value tree before serialization
+    state.state.setProperty("modelPath", m_modelPath, nullptr);
+
     if (auto xmlState = state.copyState().createXml())
         copyXmlToBinary(*xmlState, destData);
 }
 
 void AicDemoAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
-    // Restore the plugin's state from the XML representation
     if (auto xmlState = getXmlFromBinary(data, sizeInBytes))
+    {
         state.replaceState(juce::ValueTree::fromXml(*xmlState));
+
+        auto path = state.state.getProperty("modelPath", "").toString();
+        if (path.isNotEmpty())
+        {
+            loadModel(path);
+        }
+    }
 }
 
 bool AicDemoAudioProcessor::validateLicenseKey(const juce::String& licenseKey)
@@ -245,10 +242,16 @@ bool AicDemoAudioProcessor::validateLicenseKey(const juce::String& licenseKey)
         return false;
     }
 
-    // Test the license key by attempting to create a model
-    auto [testModel, errorCode] =
-        aic::AicModel::create(modelInfos[0].modelType, licenseKey.toStdString());
-    return testModel != nullptr && errorCode == aic::ErrorCode::Success;
+    // If we have a model loaded, validate by trying to create a processor
+    if (m_model)
+    {
+        auto processorResult = aic::Processor::create(*m_model, licenseKey.toStdString());
+        return processorResult.ok();
+    }
+
+    // No model loaded — accept the key optimistically.
+    // It will be validated when a model is loaded.
+    return true;
 }
 
 bool AicDemoAudioProcessor::saveLicenseKey(const juce::String& licenseKey)
@@ -267,7 +270,7 @@ bool AicDemoAudioProcessor::saveLicenseKey(const juce::String& licenseKey)
         }
     }
 
-    // Write the license key to file (delete existing file first to ensure overwrite)
+    // Write the license key to file
     if (licenseFile.exists())
     {
         licenseFile.deleteFile();
@@ -298,15 +301,27 @@ bool AicDemoAudioProcessor::loadAndValidateLicense()
         {
             juce::String licenseKey = stream.readEntireStreamAsString().trim();
 
-            if (validateLicenseKey(licenseKey))
+            if (licenseKey.isNotEmpty())
             {
                 m_licenseKey = licenseKey.toStdString();
-                m_licenseValid.store(true);
-                return true;
+
+                // If we have a model, validate the license by trying to create a processor
+                if (m_model)
+                {
+                    auto processorResult =
+                        aic::Processor::create(*m_model, licenseKey.toStdString());
+                    m_licenseValid.store(processorResult.ok());
+                }
+                else
+                {
+                    // No model loaded yet — accept the key optimistically
+                    m_licenseValid.store(true);
+                }
+                return m_licenseValid.load();
             }
             else
             {
-                DBG("Invalid license key found in file!");
+                DBG("Empty license key found in file!");
                 m_licenseValid.store(false);
                 return false;
             }
@@ -326,21 +341,81 @@ bool AicDemoAudioProcessor::loadAndValidateLicense()
     }
 }
 
+bool AicDemoAudioProcessor::loadModel(const juce::String& path)
+{
+    if (path.isEmpty())
+        return false;
+
+    m_modelPath = path;
+
+    // Load model from file
+    auto modelResult = aic::Model::create_from_file(path.toStdString());
+    if (!modelResult.ok())
+    {
+        DBG("Failed to load model from: " + path);
+        return false;
+    }
+
+    m_model.emplace(std::move(modelResult.take()));
+
+    // Need a license key to create the processor
+    if (m_licenseKey.empty())
+    {
+        m_modelChanged.store(true);
+        return false;
+    }
+
+    // Create processor with model + license
+    auto processorResult = aic::Processor::create(*m_model, m_licenseKey);
+    if (!processorResult.ok())
+    {
+        DBG("Failed to create processor (license may be invalid)");
+        m_licenseValid.store(false);
+        m_modelChanged.store(true);
+        return false;
+    }
+
+    m_licenseValid.store(true);
+    auto processor = std::move(processorResult.take());
+
+    // Initialize if we have valid audio settings
+    bool initialized = false;
+    if (m_currentSampleRate > 0 && m_currentNumFrames > 0)
+    {
+        auto err = processor.initialize(m_currentSampleRate, m_currentNumChannels,
+                                        m_currentNumFrames, true);
+        initialized = (err == aic::ErrorCode::Success);
+    }
+
+    // Create contexts
+    auto contextResult = processor.create_context();
+    auto vadResult     = processor.create_vad_context();
+
+    if (!contextResult.ok() || !vadResult.ok())
+    {
+        DBG("Failed to create processor contexts");
+        return false;
+    }
+
+    // Build bundle
+    auto bundle =
+        std::make_unique<ProcessorBundle>(std::move(processor), std::move(contextResult.take()),
+                                          std::move(vadResult.take()));
+    bundle->initialized = initialized;
+
+    // Post as pending for audio thread
+    auto* old = m_pending.exchange(bundle.release());
+    delete old; // clean up any previous pending that was never picked up
+
+    m_modelChanged.store(true);
+    return true;
+}
+
 void AicDemoAudioProcessor::forceModelRecreation()
 {
-    if (isLicenseValid())
+    if (!m_modelPath.isEmpty() && isLicenseValid())
     {
-        // Get current model index
-        auto currentModelIndex = static_cast<size_t>(state.getRawParameterValue("model")->load());
-
-        // Recreate the model
-        createModel(currentModelIndex);
-
-        // Reinitialize if we have valid audio parameters
-        if (m_currentSampleRate > 0 && m_currentNumChannels > 0 && m_currentNumFrames > 0)
-        {
-            initializeModel();
-        }
+        loadModel(m_modelPath);
     }
 }
 

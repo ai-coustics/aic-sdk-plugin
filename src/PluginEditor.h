@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AicModelInfoBox.h"
-#include "AicModelSelector.h"
+#include "AicModelPathInput.h"
 #include "AicSlider.h"
 #include "BinaryData.h"
 #include "LicenseDialog.h"
@@ -27,12 +27,9 @@ class AicDemoAudioProcessorEditor final : public juce::AudioProcessorEditor, pub
     }
 
   private:
-    // This reference is provided as a quick way for your editor to
-    // access the processor object that created it.
     AicDemoAudioProcessor& processorRef;
 
-    aic::ui::AicModelSelector                              modelSelector;
-    juce::AudioProcessorValueTreeState::ComboBoxAttachment modelSelectorAttachment;
+    aic::ui::AicModelPathInput modelPathInput;
 
     aic::ui::AicModelInfoBox modelInfoBox;
 
@@ -47,7 +44,6 @@ class AicDemoAudioProcessorEditor final : public juce::AudioProcessorEditor, pub
 
     bool m_speechDetected;
 
-    // Modal overlay component for dimming background when dialog is shown
     class ModalOverlay : public juce::Component
     {
       public:
@@ -62,32 +58,9 @@ class AicDemoAudioProcessorEditor final : public juce::AudioProcessorEditor, pub
     void updateModelInfo();
     void updateLicenseButton();
 
-    /**
-     * @brief Shows a modal overlay that darkens the background.
-     *
-     * Creates and displays a semi-transparent overlay component that covers
-     * the entire editor area, providing visual focus for modal dialogs.
-     */
     void showModalOverlay();
-
-    /**
-     * @brief Hides the modal overlay.
-     *
-     * Removes the overlay component from the editor, returning the UI
-     * to its normal appearance.
-     */
     void hideModalOverlay();
 
-    /**
-     * @brief Handles license key validation when user submits a key through the dialog.
-     *
-     * This method is called as a callback from the LicenseDialog when the user
-     * enters a license key and clicks OK. It validates the key using the processor,
-     * saves it if valid, and updates the UI accordingly.
-     *
-     * @param licenseKey The license key entered by the user
-     * @return true if the license key was valid and accepted, false otherwise
-     */
     bool handleLicenseValidation(const juce::String& licenseKey);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AicDemoAudioProcessorEditor)

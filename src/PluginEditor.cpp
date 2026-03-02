@@ -11,7 +11,12 @@
 //==============================================================================
 AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& p)
     : AudioProcessorEditor(&p), processorRef(p),
-      modelSelectorAttachment(p.state, "model", modelSelector),
+      modelPathInput(
+          [this](const juce::String& path)
+          {
+              processorRef.loadModel(path);
+              updateModelInfo();
+          }),
       enhancementAttachment(p.state, "enhancement", enhancementSlider),
       m_licenseDialog([this](const juce::String& licenseKey)
                       { return handleLicenseValidation(licenseKey); },
@@ -34,10 +39,8 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
 
     addAndMakeVisible(enhancementSlider);
 
-    addAndMakeVisible(modelSelector);
-    modelSelector.addItemList(processorRef.getModelChoices(), 1);
-    modelSelector.setSelectedItemIndex(
-        static_cast<int>(processorRef.state.getRawParameterValue("model")->load()));
+    addAndMakeVisible(modelPathInput);
+    modelPathInput.setPath(processorRef.getModelPath());
 
     updateModelInfo();
     addAndMakeVisible(modelInfoBox);
@@ -63,8 +66,6 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
 
     setResizable(false, false);
 
-    // Make sure that before the constructor has finished, you've set the
-    // editor's size to whatever you need it to be.
     setSize(454, 512);
 }
 
@@ -90,7 +91,7 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
 
     bounds.removeFromTop(8.f);
 
-    modelSelector.setBounds(bounds.removeFromTop(40));
+    modelPathInput.setBounds(bounds.removeFromTop(40));
 
     bounds.removeFromTop(8.f);
 
@@ -164,8 +165,8 @@ void AicDemoAudioProcessorEditor::timerCallback()
     if (lastLicenseState != currentLicenseState)
     {
         lastLicenseState = currentLicenseState;
-        updateLicenseButton(); // Update button text and color
-        repaint();             // Repaint to update license status display
+        updateLicenseButton();
+        repaint();
 
         // If license became invalid, show the dialog
         if (!currentLicenseState)
@@ -182,7 +183,8 @@ void AicDemoAudioProcessorEditor::timerCallback()
     }
 
     bool speechDetected = processorRef.isSpeechDetected();
-    if (speechDetected != m_speechDetected) {
+    if (speechDetected != m_speechDetected)
+    {
         m_speechDetected = speechDetected;
         repaint();
     }
@@ -203,7 +205,7 @@ void AicDemoAudioProcessorEditor::showModalOverlay()
 
     addAndMakeVisible(m_modalOverlay.get());
     m_modalOverlay->setBounds(getLocalBounds());
-    m_modalOverlay->toBack(); // Keep overlay behind other components
+    m_modalOverlay->toBack();
 }
 
 void AicDemoAudioProcessorEditor::hideModalOverlay()
@@ -216,43 +218,36 @@ void AicDemoAudioProcessorEditor::hideModalOverlay()
 
 bool AicDemoAudioProcessorEditor::handleLicenseValidation(const juce::String& licenseKey)
 {
-    // Trim whitespace from the license key
     juce::String trimmedKey = licenseKey.trim();
 
     if (trimmedKey.isEmpty())
     {
-        return false; // Empty license key is invalid
+        return false;
     }
 
     // Validate the license key using the processor
     if (processorRef.validateLicenseKey(trimmedKey))
     {
-        // License is valid, save it and update the processor's license
+        // License is valid (or accepted optimistically), save it
         if (processorRef.saveLicenseKey(trimmedKey))
         {
-            // Reload and validate the license in the processor
             if (processorRef.loadAndValidateLicense())
             {
-                // Force recreation of the current model with the new license
+                // Force recreation of the processor with the new license
                 processorRef.forceModelRecreation();
 
-                // Force update the model info since we now have a valid license
                 updateModelInfo();
-
-                // Update license button text and color
                 updateLicenseButton();
-
-                // Trigger a repaint to update the license status display
                 repaint();
 
                 m_licenseDialog.setLicenseActive(true);
 
-                return true; // License accepted, close dialog
+                return true;
             }
         }
     }
     m_licenseDialog.setLicenseActive(false);
-    return false; // License invalid or save failed, keep dialog open
+    return false;
 }
 
 void AicDemoAudioProcessorEditor::updateLicenseButton()
@@ -266,6 +261,5 @@ void AicDemoAudioProcessorEditor::updateLicenseButton()
     m_licenseButton.setColour(juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
     m_licenseButton.setColour(juce::TextButton::buttonOnColourId, juce::Colours::transparentBlack);
 
-    // Make it look like a clickable text link
     m_licenseButton.setMouseCursor(juce::MouseCursor::PointingHandCursor);
 }
