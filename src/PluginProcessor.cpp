@@ -19,11 +19,14 @@ AicDemoAudioProcessor::AicDemoAudioProcessor()
                  juce::ParameterID{"enhancement", 1}, "Enhancement Level",
                  juce::NormalisableRange<float>(0.0f, 1.0f), 1.0f),
              std::make_unique<juce::AudioParameterFloat>(
-                 juce::ParameterID{"vad_loopback", 1}, "VAD Speech Hold Duration",
-                 juce::NormalisableRange<float>(1.0f, 20.0f), 6.0f),
+                 juce::ParameterID{"vad_speech_hold_duration", 1}, "VAD Speech Hold Duration",
+                 juce::NormalisableRange<float>(0.0f, 48.0f), 0.03f),
              std::make_unique<juce::AudioParameterFloat>(
                  juce::ParameterID{"vad_sensitivity", 1}, "VAD Sensitivity",
-                 juce::NormalisableRange<float>(1.0f, 15.0f), 6.0f)
+                 juce::NormalisableRange<float>(1.0f, 15.0f), 6.0f),
+             std::make_unique<juce::AudioParameterFloat>(
+                 juce::ParameterID{"vad_minimum_speech_duration", 1}, "VAD Minimum Speech Duration",
+                 juce::NormalisableRange<float>(0.0f, 1.0f), 0.0f)
 })
 {
     // Load and validate license key
@@ -183,9 +186,11 @@ void AicDemoAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
     // VAD parameters
     m_active->vadContext.set_parameter(aic::VadParameter::SpeechHoldDuration,
-                                       state.getRawParameterValue("vad_loopback")->load());
+                                       state.getRawParameterValue("vad_speech_hold_duration")->load());
     m_active->vadContext.set_parameter(aic::VadParameter::Sensitivity,
                                        state.getRawParameterValue("vad_sensitivity")->load());
+    m_active->vadContext.set_parameter(aic::VadParameter::Sensitivity,
+                                       state.getRawParameterValue("vad_minimum_speech_duration")->load());
 
     auto processing_result = m_active->processor.process_planar(
         buffer.getArrayOfWritePointers(), static_cast<uint16_t>(totalNumInputChannels),

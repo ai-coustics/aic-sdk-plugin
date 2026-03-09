@@ -228,7 +228,7 @@ bool AicDemoAudioProcessorEditor::handleLicenseValidation(const juce::String& li
     // Validate the license key using the processor
     if (processorRef.validateLicenseKey(trimmedKey))
     {
-        // License is valid (or accepted optimistically), save it
+        // License is valid, save it
         if (processorRef.saveLicenseKey(trimmedKey))
         {
             if (processorRef.loadAndValidateLicense())
@@ -246,6 +246,7 @@ bool AicDemoAudioProcessorEditor::handleLicenseValidation(const juce::String& li
             }
         }
     }
+    // License is invalid
     m_licenseDialog.setLicenseActive(false);
     return false;
 }

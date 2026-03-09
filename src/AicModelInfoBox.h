@@ -10,7 +10,7 @@ namespace aic::ui
 
 enum ModelState
 {
-    Initilized,
+    Initialized,
     WrongAudioSettings,
     LicenseInactive,
     ProcessingNotAllowed,
@@ -33,7 +33,7 @@ struct ModelInfo
         : modelId(id), optimalSampleRate(std::to_string(sr) + " Hz"),
           optimalNumFrames(std::to_string(nf)), outputDelay(std::to_string(od) + " ms")
     {
-        modelState = ModelState::Initilized;
+        modelState = ModelState::Initialized;
     }
 };
 
@@ -66,7 +66,7 @@ class AicModelInfoBox : public juce::Component
 
         switch (modelInfo.modelState)
         {
-        case Initilized:
+        case Initialized:
         {
             std::vector<std::pair<std::string, std::string>> infoLines = {
                 {"Model", modelInfo.modelId},
@@ -115,7 +115,7 @@ class AicModelInfoBox : public juce::Component
             g.drawText("No model loaded.", bounds, juce::Justification::centred);
             bounds.removeFromTop(30);
             g.setFont(14.f);
-            g.drawText("Download models at artifacts.ai-coustics.io", bounds,
+            g.drawText("Download models from artifacts.ai-coustics.io", bounds,
                        juce::Justification::centred);
         }
         break;
