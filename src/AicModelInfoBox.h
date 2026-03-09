@@ -2,6 +2,8 @@
 
 #include "AicColours.h"
 
+#include <string>
+#include <vector>
 #include <juce_graphics/juce_graphics.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 
@@ -19,6 +21,8 @@ enum ModelState
 struct ModelInfo
 {
     std::string optimalSampleRate;
+    std::string windowLength;
+    std::string modelDelay;
     std::string optimalNumFrames;
     std::string outputDelay;
     ModelState  modelState;
@@ -27,8 +31,9 @@ struct ModelInfo
 
     ModelInfo(const ModelState state) : modelState(state) {}
 
-    ModelInfo(const int sr, const int nf, const int od)
-        : optimalSampleRate(std::to_string(sr) + " Hz"), optimalNumFrames(std::to_string(nf)),
+    ModelInfo(const int sr, const int w, const int md, const int nf, const int od)
+        : optimalSampleRate(std::to_string(sr) + " Hz"), windowLength(std::to_string(w) + " ms"),
+          modelDelay(std::to_string(md) + " ms"), optimalNumFrames(std::to_string(nf)),
           outputDelay(std::to_string(od) + " ms")
     {
         modelState = ModelState::Initilized;
@@ -68,6 +73,8 @@ class AicModelInfoBox : public juce::Component
             std::vector<std::pair<std::string, std::string>> infoLines = {
                 {"Optimal Sample Rate", modelInfo.optimalSampleRate},
                 {"Optimal Num Frames", modelInfo.optimalNumFrames},
+                {"Window Length", modelInfo.windowLength},
+                {"Model Delay", modelInfo.modelDelay},
                 {"Total Output Delay", modelInfo.outputDelay}};
 
             for (size_t i = 0; i < infoLines.size(); ++i)
@@ -111,6 +118,6 @@ class AicModelInfoBox : public juce::Component
 
   private:
     ModelInfo modelInfo;
-    bool      licenseInvalid;
+    bool      licenseInvalid = false;
 };
 } // namespace aic::ui

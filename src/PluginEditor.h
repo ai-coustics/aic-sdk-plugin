@@ -43,7 +43,8 @@ class AicDemoAudioProcessorEditor final : public juce::AudioProcessorEditor, pub
     juce::TextButton                m_licenseButton;
     std::unique_ptr<juce::Drawable> m_logo;
 
-    bool m_speechDetected;
+    bool m_speechDetected = false;
+    bool m_lastLicenseState = false;
 
     class ModalOverlay : public juce::Component
     {

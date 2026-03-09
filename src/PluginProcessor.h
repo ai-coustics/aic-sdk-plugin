@@ -4,6 +4,7 @@
 #include "juce_core/juce_core.h"
 
 #include <aic.hpp>
+#include <array>
 #include <atomic>
 #include <cassert>
 #include <cstdlib>
@@ -13,13 +14,20 @@
 
 struct ProcessorBundle
 {
+    // Shared ownership of the 64-byte-aligned model buffer.
+    // Keeps the buffer alive for the lifetime of the processor,
+    // since aic::Processor retains a reference to the model data.
+    std::shared_ptr<uint8_t> buffer;
+
     aic::Processor        processor;
     aic::ProcessorContext  context;
     aic::VadContext        vadContext;
     bool                  initialized = false;
 
-    ProcessorBundle(aic::Processor p, aic::ProcessorContext c, aic::VadContext v)
-        : processor(std::move(p)), context(std::move(c)), vadContext(std::move(v))
+    ProcessorBundle(std::shared_ptr<uint8_t> buf,
+                    aic::Processor p, aic::ProcessorContext c, aic::VadContext v)
+        : buffer(std::move(buf)), processor(std::move(p)),
+          context(std::move(c)), vadContext(std::move(v))
     {
     }
 };
@@ -66,173 +74,103 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor,
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 
+    // This can fire on audio or message thread depending on host automation.
     void parameterChanged(const juce::String& parameterID, float newValue) override;
 
     juce::AudioProcessorValueTreeState state;
 
-    /**
-     * @brief Returns the list of available model names for the selector.
-     */
     juce::StringArray getModelChoices() const
     {
         return {"sparrow-s-48khz", "sparrow-l-48khz"};
     }
 
-    /**
-     * @brief Checks if the current license key is valid.
-     */
-    bool isLicenseValid() const
-    {
-        return m_licenseValid.load();
-    }
+    bool isLicenseValid() const { return m_licenseValid.load(); }
 
-    /**
-     * @brief Gets the expected path for the license file.
-     */
     juce::String getExpectedLicensePath()
     {
-        juce::File appDataDir =
-            juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory);
-
-        juce::File licenseFile = appDataDir.getChildFile("aic").getChildFile("aic-sdk-license.txt");
-
-        return licenseFile.getFullPathName();
+        return juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+            .getChildFile("aic")
+            .getChildFile("aic-sdk-license.txt")
+            .getFullPathName();
     }
 
-    /**
-     * @brief Gets the license file object.
-     */
     juce::File getLicenseFile()
     {
-        juce::File appDataDir =
-            juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory);
-
-        juce::File licenseFile = appDataDir.getChildFile("aic").getChildFile("aic-sdk-license.txt");
-
-        return licenseFile;
+        return juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+            .getChildFile("aic")
+            .getChildFile("aic-sdk-license.txt");
     }
 
-    /**
-     * @brief Validates a license key by attempting to create a processor with it.
-     */
     bool validateLicenseKey(const juce::String& licenseKey);
-
-    /**
-     * @brief Saves a license key to the application's license file.
-     */
     bool saveLicenseKey(const juce::String& licenseKey);
-
-    /**
-     * @brief Loads and validates the license key from the application directory.
-     */
     bool loadAndValidateLicense();
-
-    /**
-     * @brief Forces recreation of the current processor with the updated license.
-     */
     void forceModelRecreation();
 
-    /**
-     * @brief Loads a model by index from the embedded binary data.
-     *
-     * Creates the Model (from compile-time embedded buffer), Processor,
-     * ProcessorContext, and VadContext on the message thread, and posts
-     * them as pending for the audio thread.
-     *
-     * @param modelIndex Index into getModelChoices() (0 = sparrow-s, 1 = sparrow-l)
-     * @return true if the model was loaded and processor created successfully
-     */
-    bool loadModel(int modelIndex);
-
-    /**
-     * @brief Gets the currently selected model index.
-     */
-    int getModelIndex() const
-    {
-        return m_modelIndex;
-    }
-
-    /**
-     * @brief Whether a model is currently loaded and active.
-     */
-    bool isModelLoaded() const
-    {
-        return m_active != nullptr && m_active->initialized;
-    }
+    int  getModelIndex() const { return m_requestedModelIndex.load(); }
+    bool isModelLoaded() const { return m_activeProcessorInitialized.load(); }
+    bool isLoading() const { return false; }
 
     aic::ui::ModelInfo getModelInfo() const
     {
-        if (!m_licenseValid && m_licenseKey.empty())
-        {
+        if (!m_licenseValid.load() && m_licenseKey.empty())
             return aic::ui::ModelInfo(aic::ui::ModelState::LicenseInactive);
-        }
 
-        if (!m_active || !m_active->initialized)
-        {
+        if (!m_activeProcessorInitialized.load())
             return aic::ui::ModelInfo(aic::ui::ModelState::WrongAudioSettings);
-        }
 
-        if (m_processingNotAllowed)
-        {
+        if (m_processingNotAllowed.load())
             return aic::ui::ModelInfo(aic::ui::ModelState::ProcessingNotAllowed);
-        }
 
-        auto outputDelay   = m_active->context.get_output_delay();
-        auto outputDelayMs = static_cast<int>(
-            juce::roundToInt((static_cast<double>(outputDelay) * 1000.0) /
-                              static_cast<double>(m_currentSampleRate)));
+        const int activeIndex = juce::jlimit(0, 1, m_activeModelIndex.load());
+        auto      outputDelayMs = m_activeOutputDelayMs.load();
 
-        auto optimalSr     = m_model ? static_cast<int>(m_model->get_optimal_sample_rate()) : 0;
-        auto optimalFrames =
-            m_model ? static_cast<int>(m_model->get_optimal_num_frames(m_currentSampleRate)) : 0;
+        auto optimalSr = m_models[activeIndex]
+                             ? static_cast<int>(m_models[activeIndex]->get_optimal_sample_rate())
+                             : 0;
+        auto optimalFrames = m_models[activeIndex]
+                                 ? static_cast<int>(
+                                       m_models[activeIndex]->get_optimal_num_frames(m_currentSampleRate))
+                                 : 0;
+        const auto windowLengthMs = (m_currentSampleRate > 0u)
+                                        ? juce::roundToInt((static_cast<double>(optimalFrames) * 1000.0) /
+                                                           static_cast<double>(m_currentSampleRate))
+                                        : 0;
+        const auto modelDelayMs = juce::jmax(0, outputDelayMs - windowLengthMs);
 
-        return aic::ui::ModelInfo(optimalSr, optimalFrames, outputDelayMs);
+        return aic::ui::ModelInfo(optimalSr, windowLengthMs, modelDelayMs, optimalFrames,
+                                  outputDelayMs);
     }
 
-    bool modelChanged() const
-    {
-        return m_modelChanged.load();
-    }
+    bool modelChanged() const { return m_modelChanged.load(); }
+    void acknowledgeModelChanged() { m_modelChanged.store(false); }
 
-    void acknowledgeModelChanged()
-    {
-        m_modelChanged.store(false);
-    }
-
-    juce::String getSdkVersion() const
-    {
-        return aic::get_sdk_version();
-    }
+    juce::String getSdkVersion() const { return aic::get_sdk_version(); }
 
     bool isSpeechDetected() const
     {
-        if (m_active && m_active->initialized)
-        {
-            return m_active->vadContext.is_speech_detected();
-        }
-        return false;
+        return m_speechDetected.load();
     }
 
   private:
-    // Active processor bundle — used on audio thread only
-    std::unique_ptr<ProcessorBundle> m_active;
+    bool loadEmbeddedModel(int modelIndex);
+    void rebuildProcessors();
+    void applyRequestedModelSwitch();
+    void updateActiveRuntimeState();
 
-    // Pending processor bundle — set on message thread, picked up on audio thread
-    std::atomic<ProcessorBundle*> m_pending{nullptr};
-
-    // Model object — kept alive for the lifetime of the processor
-    std::optional<aic::Model> m_model;
-
-    // Aligned buffer for the model data — must outlive m_model
-    std::unique_ptr<uint8_t, decltype(&std::free)> m_alignedBuffer{nullptr, &std::free};
-
-    // Currently selected model index
-    int m_modelIndex{-1};
+    std::array<std::optional<aic::Model>, 2>        m_models;
+    std::array<std::shared_ptr<uint8_t>, 2>         m_modelBuffers;
+    std::array<std::unique_ptr<ProcessorBundle>, 2> m_processors;
+    std::atomic<int>                                m_requestedModelIndex{0};
+    std::atomic<int>                                m_activeModelIndex{0};
 
     std::string       m_licenseKey;
     std::atomic<bool> m_licenseValid = {false};
 
-    bool m_processingNotAllowed = {false};
+    std::atomic<bool> m_processingNotAllowed = {false};
+    std::atomic<bool> m_rebuildRequested{false};
+    std::atomic<bool> m_activeProcessorInitialized{false};
+    std::atomic<bool> m_speechDetected{false};
+    std::atomic<int>  m_activeOutputDelayMs{0};
 
     uint32_t          m_currentSampleRate{48000};
     uint16_t          m_currentNumChannels{2};

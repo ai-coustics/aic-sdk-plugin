@@ -46,15 +46,22 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
     addAndMakeVisible(m_logo.get());
 
     // Check if license is valid and show dialog if needed
+    m_lastLicenseState = processorRef.isLicenseValid();
+    m_speechDetected   = processorRef.isSpeechDetected();
+
     if (!processorRef.isLicenseValid())
     {
+        juce::Component::SafePointer<AicDemoAudioProcessorEditor> safeThis(this);
         // Use a timer to show the license dialog after the component is fully constructed
         juce::Timer::callAfterDelay(100,
-                                    [this]()
+                                    [safeThis]()
                                     {
-                                        showModalOverlay();
-                                        m_licenseDialog.showDialog(this);
-                                        m_licenseDialog.toFront(false);
+                                        if (safeThis == nullptr)
+                                            return;
+
+                                        safeThis->showModalOverlay();
+                                        safeThis->m_licenseDialog.showDialog(safeThis.getComponent());
+                                        safeThis->m_licenseDialog.toFront(false);
                                     });
     }
 
@@ -154,13 +161,12 @@ void AicDemoAudioProcessorEditor::resized()
 
 void AicDemoAudioProcessorEditor::timerCallback()
 {
-    static bool lastLicenseState    = processorRef.isLicenseValid();
     bool        currentLicenseState = processorRef.isLicenseValid();
 
     // Check if license state changed
-    if (lastLicenseState != currentLicenseState)
+    if (m_lastLicenseState != currentLicenseState)
     {
-        lastLicenseState = currentLicenseState;
+        m_lastLicenseState = currentLicenseState;
         updateLicenseButton();
         repaint();
 
