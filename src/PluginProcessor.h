@@ -7,6 +7,7 @@
 #include <array>
 #include <atomic>
 #include <cassert>
+#include <cstddef>
 #include <cstdlib>
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <memory>
@@ -121,7 +122,7 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor,
         if (m_processingNotAllowed.load())
             return aic::ui::ModelInfo(aic::ui::ModelState::ProcessingNotAllowed);
 
-        const int activeIndex = juce::jlimit(0, 1, m_activeModelIndex.load());
+        const std::size_t activeIndex = toModelArrayIndex(m_activeModelIndex.load());
         auto      outputDelayMs = m_activeOutputDelayMs.load();
 
         auto optimalSr = m_models[activeIndex]
@@ -152,6 +153,12 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor,
     }
 
   private:
+    static constexpr int kMaxModelIndex = 1;
+    static std::size_t toModelArrayIndex(int index)
+    {
+        return static_cast<std::size_t>(juce::jlimit(0, kMaxModelIndex, index));
+    }
+
     bool loadEmbeddedModel(int modelIndex);
     void rebuildProcessors();
     void applyRequestedModelSwitch();

@@ -15,16 +15,16 @@
 
 namespace
 {
-constexpr int kNumModels = 2;
+constexpr std::size_t kNumModels = 2u;
 
-const char* getModelRawData(const int modelIndex)
+const char* getModelRawData(const std::size_t modelIndex)
 {
-    return (modelIndex == 0) ? BinaryData::sparrows48khz_aicmodel : BinaryData::sparrowl48khz_aicmodel;
+    return (modelIndex == 0u) ? BinaryData::sparrows48khz_aicmodel : BinaryData::sparrowl48khz_aicmodel;
 }
 
-size_t getModelDataSize(const int modelIndex)
+size_t getModelDataSize(const std::size_t modelIndex)
 {
-    return static_cast<size_t>((modelIndex == 0) ? BinaryData::sparrows48khz_aicmodelSize
+    return static_cast<size_t>((modelIndex == 0u) ? BinaryData::sparrows48khz_aicmodelSize
                                                   : BinaryData::sparrowl48khz_aicmodelSize);
 }
 
@@ -79,8 +79,8 @@ AicDemoAudioProcessor::AicDemoAudioProcessor()
 
     loadAndValidateLicense();
 
-    for (int modelIndex = 0; modelIndex < kNumModels; ++modelIndex)
-        loadEmbeddedModel(modelIndex);
+    for (std::size_t modelIndex = 0; modelIndex < kNumModels; ++modelIndex)
+        loadEmbeddedModel(static_cast<int>(modelIndex));
 
     rebuildProcessors();
     updateActiveRuntimeState();
@@ -95,8 +95,9 @@ AicDemoAudioProcessor::~AicDemoAudioProcessor()
 
 bool AicDemoAudioProcessor::loadEmbeddedModel(const int modelIndex)
 {
-    const char* rawData  = getModelRawData(modelIndex);
-    const size_t dataSize = getModelDataSize(modelIndex);
+    const std::size_t arrayIndex = toModelArrayIndex(modelIndex);
+    const char*       rawData    = getModelRawData(arrayIndex);
+    const size_t      dataSize   = getModelDataSize(arrayIndex);
 
     const size_t alignedSize = (dataSize + 63u) & ~size_t(63u);
     std::shared_ptr<uint8_t> buffer(allocateAlignedBuffer(64u, alignedSize), freeAlignedBuffer);
@@ -116,8 +117,8 @@ bool AicDemoAudioProcessor::loadEmbeddedModel(const int modelIndex)
         return false;
     }
 
-    m_modelBuffers[modelIndex] = buffer;
-    m_models[modelIndex].emplace(std::move(modelResult.take()));
+    m_modelBuffers[arrayIndex] = buffer;
+    m_models[arrayIndex].emplace(std::move(modelResult.take()));
 
     return true;
 }
@@ -138,7 +139,7 @@ void AicDemoAudioProcessor::rebuildProcessors()
         return;
     }
 
-    for (int modelIndex = 0; modelIndex < kNumModels; ++modelIndex)
+    for (std::size_t modelIndex = 0; modelIndex < kNumModels; ++modelIndex)
     {
         if (!m_models[modelIndex] || !m_modelBuffers[modelIndex])
             continue;
@@ -185,10 +186,11 @@ void AicDemoAudioProcessor::rebuildProcessors()
 
 void AicDemoAudioProcessor::applyRequestedModelSwitch()
 {
-    const int requestedIndex = juce::jlimit(0, 1, m_requestedModelIndex.load());
-    const int activeIndex    = juce::jlimit(0, 1, m_activeModelIndex.load());
+    const int requestedIndexInt = juce::jlimit(0, kMaxModelIndex, m_requestedModelIndex.load());
+    const int activeIndexInt    = juce::jlimit(0, kMaxModelIndex, m_activeModelIndex.load());
+    const std::size_t activeIndex    = toModelArrayIndex(activeIndexInt);
 
-    if (requestedIndex == activeIndex)
+    if (requestedIndexInt == activeIndexInt)
         return;
 
     if (m_processors[activeIndex])
@@ -196,7 +198,7 @@ void AicDemoAudioProcessor::applyRequestedModelSwitch()
         m_processors[activeIndex]->context.reset();
     }
 
-    m_activeModelIndex.store(requestedIndex);
+    m_activeModelIndex.store(requestedIndexInt);
 
     m_processingNotAllowed.store(false);
     m_speechDetected.store(false);
@@ -206,7 +208,7 @@ void AicDemoAudioProcessor::applyRequestedModelSwitch()
 
 void AicDemoAudioProcessor::updateActiveRuntimeState()
 {
-    const int activeIndex = juce::jlimit(0, 1, m_activeModelIndex.load());
+    const std::size_t activeIndex = toModelArrayIndex(m_activeModelIndex.load());
     if (m_processors[activeIndex] && m_processors[activeIndex]->initialized)
     {
         m_activeProcessorInitialized.store(true);
@@ -335,7 +337,7 @@ void AicDemoAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
     applyRequestedModelSwitch();
 
-    const int activeIndex = juce::jlimit(0, 1, m_activeModelIndex.load());
+    const std::size_t activeIndex = toModelArrayIndex(m_activeModelIndex.load());
     auto*     active      = m_processors[activeIndex].get();
 
     if (!isLicenseValid() || !active || !active->initialized)
