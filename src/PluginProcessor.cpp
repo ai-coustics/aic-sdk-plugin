@@ -7,6 +7,9 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#if JUCE_WINDOWS
+#include <malloc.h>
+#endif
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_audio_processors/juce_audio_processors.h>
 
@@ -23,6 +26,24 @@ size_t getModelDataSize(const int modelIndex)
 {
     return static_cast<size_t>((modelIndex == 0) ? BinaryData::sparrows48khz_aicmodelSize
                                                   : BinaryData::sparrowl48khz_aicmodelSize);
+}
+
+uint8_t* allocateAlignedBuffer(size_t alignment, size_t size)
+{
+#if JUCE_WINDOWS
+    return static_cast<uint8_t*>(_aligned_malloc(size, alignment));
+#else
+    return static_cast<uint8_t*>(std::aligned_alloc(alignment, size));
+#endif
+}
+
+void freeAlignedBuffer(uint8_t* p)
+{
+#if JUCE_WINDOWS
+    _aligned_free(p);
+#else
+    std::free(p);
+#endif
 }
 } // namespace
 
@@ -78,9 +99,7 @@ bool AicDemoAudioProcessor::loadEmbeddedModel(const int modelIndex)
     const size_t dataSize = getModelDataSize(modelIndex);
 
     const size_t alignedSize = (dataSize + 63u) & ~size_t(63u);
-    std::shared_ptr<uint8_t> buffer(
-        static_cast<uint8_t*>(std::aligned_alloc(64u, alignedSize)),
-        [](uint8_t* p) { std::free(p); });
+    std::shared_ptr<uint8_t> buffer(allocateAlignedBuffer(64u, alignedSize), freeAlignedBuffer);
 
     if (!buffer)
     {
