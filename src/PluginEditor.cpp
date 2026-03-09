@@ -11,12 +11,7 @@
 //==============================================================================
 AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& p)
     : AudioProcessorEditor(&p), processorRef(p),
-      modelPathInput(
-          [this](const juce::String& path)
-          {
-              processorRef.loadModel(path);
-              updateModelInfo();
-          }),
+      modelSelectorAttachment(p.state, "model", modelSelector),
       enhancementAttachment(p.state, "enhancement", enhancementSlider),
       m_licenseDialog([this](const juce::String& licenseKey)
                       { return handleLicenseValidation(licenseKey); },
@@ -39,8 +34,9 @@ AicDemoAudioProcessorEditor::AicDemoAudioProcessorEditor(AicDemoAudioProcessor& 
 
     addAndMakeVisible(enhancementSlider);
 
-    addAndMakeVisible(modelPathInput);
-    modelPathInput.setPath(processorRef.getModelPath());
+    addAndMakeVisible(modelSelector);
+    modelSelector.addItemList(processorRef.getModelChoices(), 1);
+    modelSelector.setSelectedItemIndex(processorRef.getModelIndex());
 
     updateModelInfo();
     addAndMakeVisible(modelInfoBox);
@@ -91,7 +87,7 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
 
     bounds.removeFromTop(8.f);
 
-    modelPathInput.setBounds(bounds.removeFromTop(40));
+    modelSelector.setBounds(bounds.removeFromTop(40));
 
     bounds.removeFromTop(8.f);
 

@@ -63,7 +63,9 @@ juce_add_plugin(${PROJECT_NAME}
 juce_add_binary_data(aic-data SOURCES
     assets/aic_font.otf
     assets/aic_logo.svg
-    assets/alert.svg)
+    assets/alert.svg
+    assets/sparrow-s-48khz.aicmodel
+    assets/sparrow-l-48khz.aicmodel)
 
 target_sources(${PROJECT_NAME} PRIVATE src/PluginEditor.cpp
                                        src/PluginProcessor.cpp

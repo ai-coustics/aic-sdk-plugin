@@ -1,9 +1,12 @@
 #include "PluginProcessor.h"
 
+#include "BinaryData.h"
 #include "PluginEditor.h"
 
 #include <aic.hpp>
 #include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_audio_processors/juce_audio_processors.h>
 
@@ -13,7 +16,10 @@ AicDemoAudioProcessor::AicDemoAudioProcessor()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       state(*this, nullptr, "state",
-            {std::make_unique<juce::AudioParameterBool>(juce::ParameterID{"bypass", 1}, "Bypass",
+            {std::make_unique<juce::AudioParameterChoice>(
+                 juce::ParameterID{"model", 1}, "Model",
+                 juce::StringArray{"sparrow-s-48khz", "sparrow-l-48khz"}, 0),
+             std::make_unique<juce::AudioParameterBool>(juce::ParameterID{"bypass", 1}, "Bypass",
                                                         false),
              std::make_unique<juce::AudioParameterFloat>(
                  juce::ParameterID{"enhancement", 1}, "Enhancement Level",
@@ -26,15 +32,21 @@ AicDemoAudioProcessor::AicDemoAudioProcessor()
                  juce::NormalisableRange<float>(1.0f, 15.0f), 6.0f),
              std::make_unique<juce::AudioParameterFloat>(
                  juce::ParameterID{"vad_minimum_speech_duration", 1}, "VAD Minimum Speech Duration",
-                 juce::NormalisableRange<float>(0.0f, 1.0f), 0.0f)
-})
+                 juce::NormalisableRange<float>(0.0f, 1.0f), 0.0f)})
 {
+    state.addParameterListener("model", this);
+
     // Load and validate license key
     loadAndValidateLicense();
+
+    // Load the default model (index 0)
+    loadModel(0);
 }
 
 AicDemoAudioProcessor::~AicDemoAudioProcessor()
 {
+    state.removeParameterListener("model", this);
+
     // Clean up any pending bundle that was never picked up
     delete m_pending.exchange(nullptr);
 }
@@ -111,9 +123,9 @@ void AicDemoAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
     m_currentNumFrames   = static_cast<size_t>(samplesPerBlock);
 
     // Rebuild processor pipeline at new audio settings
-    if (!m_modelPath.isEmpty() && isLicenseValid())
+    if (m_modelIndex >= 0 && isLicenseValid())
     {
-        loadModel(m_modelPath);
+        loadModel(m_modelIndex);
     }
 }
 
@@ -219,9 +231,6 @@ juce::AudioProcessorEditor* AicDemoAudioProcessor::createEditor()
 //==============================================================================
 void AicDemoAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
-    // Store model path in the value tree before serialization
-    state.state.setProperty("modelPath", m_modelPath, nullptr);
-
     if (auto xmlState = state.copyState().createXml())
         copyXmlToBinary(*xmlState, destData);
 }
@@ -232,11 +241,16 @@ void AicDemoAudioProcessor::setStateInformation(const void* data, int sizeInByte
     {
         state.replaceState(juce::ValueTree::fromXml(*xmlState));
 
-        auto path = state.state.getProperty("modelPath", "").toString();
-        if (path.isNotEmpty())
-        {
-            loadModel(path);
-        }
+        int modelIndex = static_cast<int>(state.getRawParameterValue("model")->load());
+        loadModel(modelIndex);
+    }
+}
+
+void AicDemoAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
+{
+    if (parameterID == "model")
+    {
+        loadModel(static_cast<int>(newValue));
     }
 }
 
@@ -346,22 +360,53 @@ bool AicDemoAudioProcessor::loadAndValidateLicense()
     }
 }
 
-bool AicDemoAudioProcessor::loadModel(const juce::String& path)
+bool AicDemoAudioProcessor::loadModel(int modelIndex)
 {
-    if (path.isEmpty())
+    modelIndex = juce::jlimit(0, 1, modelIndex);
+
+    // Select embedded model data
+    const char* rawData = nullptr;
+    size_t      dataSize = 0;
+
+    if (modelIndex == 0)
+    {
+        rawData  = BinaryData::sparrows48khz_aicmodel;
+        dataSize = static_cast<size_t>(BinaryData::sparrows48khz_aicmodelSize);
+    }
+    else
+    {
+        rawData  = BinaryData::sparrowl48khz_aicmodel;
+        dataSize = static_cast<size_t>(BinaryData::sparrowl48khz_aicmodelSize);
+    }
+
+    // Allocate a 64-byte-aligned copy of the model data.
+    // The buffer must remain valid for the lifetime of the aic::Model object.
+    size_t alignedSize = (dataSize + 63u) & ~size_t(63u);
+    auto*  newBuf      = static_cast<uint8_t*>(std::aligned_alloc(64u, alignedSize));
+    if (!newBuf)
+    {
+        DBG("Failed to allocate aligned model buffer");
         return false;
+    }
+    std::memcpy(newBuf, rawData, dataSize);
 
-    m_modelPath = path;
-
-    // Load model from file
-    auto modelResult = aic::Model::create_from_file(path.toStdString());
+    // Create the model from the aligned buffer.
+    // m_model.emplace() destroys the previous aic::Model (safe per SDK docs:
+    // "It is safe to destroy the Model after creating the desired processors").
+    auto modelResult = aic::Model::create_from_buffer(newBuf, dataSize);
     if (!modelResult.ok())
     {
-        DBG("Failed to load model from: " + path);
+        std::free(newBuf);
+        DBG("Failed to create model from buffer");
         return false;
     }
 
     m_model.emplace(std::move(modelResult.take()));
+
+    // The old aligned buffer is freed here; the old Model has already been destroyed above.
+    m_alignedBuffer.reset(newBuf);
+
+    m_modelIndex = modelIndex;
 
     // Need a license key to create the processor
     if (m_licenseKey.empty())
@@ -381,7 +426,7 @@ bool AicDemoAudioProcessor::loadModel(const juce::String& path)
     }
 
     m_licenseValid.store(true);
-    auto processor = std::move(processorResult.take());
+    auto processor = processorResult.take();
 
     // Initialize if we have valid audio settings
     bool initialized = false;
@@ -402,15 +447,14 @@ bool AicDemoAudioProcessor::loadModel(const juce::String& path)
         return false;
     }
 
-    // Build bundle
+    // Build bundle and post as pending for audio thread
     auto bundle =
         std::make_unique<ProcessorBundle>(std::move(processor), std::move(contextResult.take()),
                                           std::move(vadResult.take()));
     bundle->initialized = initialized;
 
-    // Post as pending for audio thread
     auto* old = m_pending.exchange(bundle.release());
-    delete old; // clean up any previous pending that was never picked up
+    delete old;
 
     m_modelChanged.store(true);
     return true;
@@ -418,9 +462,9 @@ bool AicDemoAudioProcessor::loadModel(const juce::String& path)
 
 void AicDemoAudioProcessor::forceModelRecreation()
 {
-    if (!m_modelPath.isEmpty() && isLicenseValid())
+    if (m_modelIndex >= 0 && isLicenseValid())
     {
-        loadModel(m_modelPath);
+        loadModel(m_modelIndex);
     }
 }
 

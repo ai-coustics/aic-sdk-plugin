@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AicModelInfoBox.h"
-#include "AicModelPathInput.h"
+#include "AicModelSelector.h"
 #include "AicSlider.h"
 #include "BinaryData.h"
 #include "LicenseDialog.h"
@@ -29,7 +29,8 @@ class AicDemoAudioProcessorEditor final : public juce::AudioProcessorEditor, pub
   private:
     AicDemoAudioProcessor& processorRef;
 
-    aic::ui::AicModelPathInput modelPathInput;
+    aic::ui::AicModelSelector                              modelSelector;
+    juce::AudioProcessorValueTreeState::ComboBoxAttachment modelSelectorAttachment;
 
     aic::ui::AicModelInfoBox modelInfoBox;
 

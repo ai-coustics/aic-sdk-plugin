@@ -10,16 +10,14 @@ namespace aic::ui
 
 enum ModelState
 {
-    Initialized,
+    Initilized,
     WrongAudioSettings,
     LicenseInactive,
     ProcessingNotAllowed,
-    NoModelLoaded,
 };
 
 struct ModelInfo
 {
-    std::string modelId;
     std::string optimalSampleRate;
     std::string optimalNumFrames;
     std::string outputDelay;
@@ -29,16 +27,15 @@ struct ModelInfo
 
     ModelInfo(const ModelState state) : modelState(state) {}
 
-    ModelInfo(const std::string& id, const int sr, const int nf, const int od)
-        : modelId(id), optimalSampleRate(std::to_string(sr) + " Hz"),
-          optimalNumFrames(std::to_string(nf)), outputDelay(std::to_string(od) + " ms")
+    ModelInfo(const int sr, const int nf, const int od)
+        : optimalSampleRate(std::to_string(sr) + " Hz"), optimalNumFrames(std::to_string(nf)),
+          outputDelay(std::to_string(od) + " ms")
     {
-        modelState = ModelState::Initialized;
+        modelState = ModelState::Initilized;
     }
 };
 
 class AicModelInfoBox : public juce::Component
-
 {
   public:
     AicModelInfoBox() {}
@@ -66,10 +63,9 @@ class AicModelInfoBox : public juce::Component
 
         switch (modelInfo.modelState)
         {
-        case Initialized:
+        case Initilized:
         {
             std::vector<std::pair<std::string, std::string>> infoLines = {
-                {"Model", modelInfo.modelId},
                 {"Optimal Sample Rate", modelInfo.optimalSampleRate},
                 {"Optimal Num Frames", modelInfo.optimalNumFrames},
                 {"Total Output Delay", modelInfo.outputDelay}};
@@ -108,17 +104,6 @@ class AicModelInfoBox : public juce::Component
             g.drawText("Check your license and internet connection.", bounds,
                        juce::Justification::centred);
         }
-        break;
-        case NoModelLoaded:
-        {
-            g.setFont(16.f);
-            g.drawText("No model loaded.", bounds, juce::Justification::centred);
-            bounds.removeFromTop(30);
-            g.setFont(14.f);
-            g.drawText("Download models from artifacts.ai-coustics.io", bounds,
-                       juce::Justification::centred);
-        }
-        break;
         }
     }
 

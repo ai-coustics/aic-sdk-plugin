@@ -6,6 +6,7 @@
 #include <aic.hpp>
 #include <atomic>
 #include <cassert>
+#include <cstdlib>
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <memory>
 #include <optional>
@@ -24,7 +25,8 @@ struct ProcessorBundle
 };
 
 //==============================================================================
-class AicDemoAudioProcessor final : public juce::AudioProcessor
+class AicDemoAudioProcessor final : public juce::AudioProcessor,
+                                    public juce::AudioProcessorValueTreeState::Listener
 {
   public:
     //==============================================================================
@@ -64,7 +66,17 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
+
     juce::AudioProcessorValueTreeState state;
+
+    /**
+     * @brief Returns the list of available model names for the selector.
+     */
+    juce::StringArray getModelChoices() const
+    {
+        return {"sparrow-s-48khz", "sparrow-l-48khz"};
+    }
 
     /**
      * @brief Checks if the current license key is valid.
@@ -121,22 +133,23 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
     void forceModelRecreation();
 
     /**
-     * @brief Loads a model from a file path and creates the processor pipeline.
+     * @brief Loads a model by index from the embedded binary data.
      *
-     * This creates the Model, Processor, ProcessorContext, and VadContext
-     * on the message thread, and posts them as pending for the audio thread.
+     * Creates the Model (from compile-time embedded buffer), Processor,
+     * ProcessorContext, and VadContext on the message thread, and posts
+     * them as pending for the audio thread.
      *
-     * @param path Full path to the model file
+     * @param modelIndex Index into getModelChoices() (0 = sparrow-s, 1 = sparrow-l)
      * @return true if the model was loaded and processor created successfully
      */
-    bool loadModel(const juce::String& path);
+    bool loadModel(int modelIndex);
 
     /**
-     * @brief Gets the current model file path.
+     * @brief Gets the currently selected model index.
      */
-    juce::String getModelPath() const
+    int getModelIndex() const
     {
-        return m_modelPath;
+        return m_modelIndex;
     }
 
     /**
@@ -156,14 +169,7 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
 
         if (!m_active || !m_active->initialized)
         {
-            if (m_modelPath.isEmpty())
-            {
-                return aic::ui::ModelInfo(aic::ui::ModelState::NoModelLoaded);
-            }
-            else
-            {
-                return aic::ui::ModelInfo(aic::ui::ModelState::WrongAudioSettings);
-            }
+            return aic::ui::ModelInfo(aic::ui::ModelState::WrongAudioSettings);
         }
 
         if (m_processingNotAllowed)
@@ -176,12 +182,11 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
             juce::roundToInt((static_cast<double>(outputDelay) * 1000.0) /
                               static_cast<double>(m_currentSampleRate)));
 
-        auto modelId       = m_model ? m_model->get_id() : std::string("Unknown");
         auto optimalSr     = m_model ? static_cast<int>(m_model->get_optimal_sample_rate()) : 0;
         auto optimalFrames =
             m_model ? static_cast<int>(m_model->get_optimal_num_frames(m_currentSampleRate)) : 0;
 
-        return aic::ui::ModelInfo(modelId, optimalSr, optimalFrames, outputDelayMs);
+        return aic::ui::ModelInfo(optimalSr, optimalFrames, outputDelayMs);
     }
 
     bool modelChanged() const
@@ -218,8 +223,11 @@ class AicDemoAudioProcessor final : public juce::AudioProcessor
     // Model object — kept alive for the lifetime of the processor
     std::optional<aic::Model> m_model;
 
-    // Current model file path
-    juce::String m_modelPath;
+    // Aligned buffer for the model data — must outlive m_model
+    std::unique_ptr<uint8_t, decltype(&std::free)> m_alignedBuffer{nullptr, &std::free};
+
+    // Currently selected model index
+    int m_modelIndex{-1};
 
     std::string       m_licenseKey;
     std::atomic<bool> m_licenseValid = {false};
