@@ -2,6 +2,8 @@
 
 #include "AicColours.h"
 
+#include <string>
+#include <vector>
 #include <juce_graphics/juce_graphics.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 
@@ -25,7 +27,6 @@ struct ModelInfo
     std::string outputDelay;
     ModelState  modelState;
 
-    // Constructor for easy initialization
     ModelInfo() = default;
 
     ModelInfo(const ModelState state) : modelState(state) {}
@@ -40,19 +41,16 @@ struct ModelInfo
 };
 
 class AicModelInfoBox : public juce::Component
-
 {
   public:
     AicModelInfoBox() {}
 
-    // Method to update model information
     void setModelInfo(const ModelInfo& info)
     {
         modelInfo = info;
-        repaint(); // Trigger a repaint to show updated info
+        repaint();
     }
 
-    // Getter for current model info
     const ModelInfo& getModelInfo() const
     {
         return modelInfo;
@@ -72,7 +70,6 @@ class AicModelInfoBox : public juce::Component
         {
         case Initilized:
         {
-            // Create a vector of label-value pairs for easy iteration
             std::vector<std::pair<std::string, std::string>> infoLines = {
                 {"Optimal Sample Rate", modelInfo.optimalSampleRate},
                 {"Optimal Num Frames", modelInfo.optimalNumFrames},
@@ -80,7 +77,6 @@ class AicModelInfoBox : public juce::Component
                 {"Model Delay", modelInfo.modelDelay},
                 {"Total Output Delay", modelInfo.outputDelay}};
 
-            // Draw each line
             for (size_t i = 0; i < infoLines.size(); ++i)
             {
                 auto line = bounds.removeFromTop(24);
@@ -89,7 +85,6 @@ class AicModelInfoBox : public juce::Component
                 g.setFont(16.f);
                 g.drawText(infoLines[i].second, line, juce::Justification::centredRight);
 
-                // Add spacing between lines (except after the last line)
                 if (i < infoLines.size() - 1)
                     bounds.removeFromTop(6);
             }
@@ -123,6 +118,6 @@ class AicModelInfoBox : public juce::Component
 
   private:
     ModelInfo modelInfo;
-    bool      licenseInvalid;
+    bool      licenseInvalid = false;
 };
 } // namespace aic::ui

@@ -8,7 +8,7 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_gui_extra/juce_gui_extra.h>
 
-namespace
+namespace aic::ui
 {
 struct SliderLnF : juce::LookAndFeel_V4
 {
@@ -95,10 +95,7 @@ struct SliderLnF : juce::LookAndFeel_V4
         return {slider.getLocalBounds(), juce::Rectangle<int>(0, 0)};
     }
 };
-} // namespace
-
-namespace aic::ui
-{
+ 
 class AicSlider : public juce::Slider
 {
   public:

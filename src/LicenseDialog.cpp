@@ -27,15 +27,15 @@ void ErrorDialog::setupComponents()
     addAndMakeVisible(m_alertTriangle.get());
 
     // Title label
-    m_titleLabel.setFont(
-        juce::Font(juce::Font::getDefaultSansSerifFontName(), 18.0f, juce::Font::plain));
+    m_titleLabel.setFont(juce::Font(
+        juce::FontOptions(juce::Font::getDefaultSansSerifFontName(), 18.0f, juce::Font::plain)));
     m_titleLabel.setJustificationType(juce::Justification::left);
     m_titleLabel.setColour(juce::Label::textColourId, aic::ui::BLACK_0);
     addAndMakeVisible(m_titleLabel);
 
     // Message label
-    m_messageLabel.setFont(
-        juce::Font(juce::Font::getDefaultSansSerifFontName(), 16.0f, juce::Font::plain));
+    m_messageLabel.setFont(juce::Font(
+        juce::FontOptions(juce::Font::getDefaultSansSerifFontName(), 16.0f, juce::Font::plain)));
     m_messageLabel.setJustificationType(juce::Justification::left);
     m_messageLabel.setColour(juce::Label::textColourId, aic::ui::BLACK_15);
     m_messageLabel.setMinimumHorizontalScale(1.0f); // Allow text wrapping
@@ -69,9 +69,9 @@ void ErrorDialog::resized()
 
     auto firstLine = area.removeFromTop(24);
     // Alert Triangle
-    m_alertTriangle->setTransformToFit(firstLine.removeFromLeft(24).reduced(0.f, 4.f).toFloat(),
+    m_alertTriangle->setTransformToFit(firstLine.removeFromLeft(24).reduced(0, 4).toFloat(),
                                        juce::RectanglePlacement::centred);
-    firstLine.removeFromLeft(8.f);
+    firstLine.removeFromLeft(8);
     // Title
     m_titleLabel.setBounds(firstLine);
     area.removeFromTop(8); // spacing
@@ -82,8 +82,11 @@ void ErrorDialog::resized()
 
     // Get actual text height and adjust if needed
     auto font       = m_messageLabel.getFont();
-    auto textWidth  = static_cast<float>(messageArea.getWidth());
-    auto textHeight = font.getStringWidth(m_messageLabel.getText()) / textWidth * font.getHeight();
+    juce::AttributedString attributedText(m_messageLabel.getText());
+    attributedText.setFont(font);
+    juce::TextLayout textLayout;
+    textLayout.createLayout(attributedText, static_cast<float>(messageArea.getWidth()));
+    auto textHeight = textLayout.getHeight();
     if (textHeight > static_cast<float>(messageArea.getHeight()))
     {
         // Adjust dialog size if text is too long
@@ -180,8 +183,8 @@ void LicenseDialog::setupComponents()
     {
         m_titleLabel.setText("License Required", juce::dontSendNotification);
     }
-    m_titleLabel.setFont(
-        juce::Font(juce::Font::getDefaultSansSerifFontName(), 18.0f, juce::Font::plain));
+    m_titleLabel.setFont(juce::Font(
+        juce::FontOptions(juce::Font::getDefaultSansSerifFontName(), 18.0f, juce::Font::plain)));
     m_titleLabel.setJustificationType(juce::Justification::left);
     m_titleLabel.setColour(juce::Label::textColourId, aic::ui::BLACK_100);
     addAndMakeVisible(m_titleLabel);
@@ -200,16 +203,16 @@ void LicenseDialog::setupComponents()
                                    "plugin. To acquire a key, contact: info@ai-coustics.com",
                                    juce::dontSendNotification);
     }
-    m_instructionLabel.setFont(
-        juce::Font(juce::Font::getDefaultSansSerifFontName(), 16.0f, juce::Font::plain));
+    m_instructionLabel.setFont(juce::Font(
+        juce::FontOptions(juce::Font::getDefaultSansSerifFontName(), 16.0f, juce::Font::plain)));
     m_instructionLabel.setJustificationType(juce::Justification::left);
     m_instructionLabel.setColour(juce::Label::textColourId, aic::ui::BLACK_60);
     m_instructionLabel.setMinimumHorizontalScale(1.0f); // Prevent text squeezing
     addAndMakeVisible(m_instructionLabel);
 
     m_licenseLabel.setText("License Key", juce::dontSendNotification);
-    m_licenseLabel.setFont(
-        juce::Font(juce::Font::getDefaultSansSerifFontName(), 16.0f, juce::Font::plain));
+    m_licenseLabel.setFont(juce::Font(
+        juce::FontOptions(juce::Font::getDefaultSansSerifFontName(), 16.0f, juce::Font::plain)));
     m_licenseLabel.setJustificationType(juce::Justification::left);
     m_licenseLabel.setColour(juce::Label::textColourId, aic::ui::BLACK_100);
     addAndMakeVisible(m_licenseLabel);
@@ -226,8 +229,8 @@ void LicenseDialog::setupComponents()
                                           0, "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq"
                                              "rstuvwxyz!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"),
                                       true);
-    m_licenseKeyEditor.setFont(
-        juce::Font(juce::Font::getDefaultSansSerifFontName(), 16.0f, juce::Font::plain));
+    m_licenseKeyEditor.setFont(juce::Font(
+        juce::FontOptions(juce::Font::getDefaultSansSerifFontName(), 16.0f, juce::Font::plain)));
     m_licenseKeyEditor.setColour(juce::TextEditor::backgroundColourId, aic::ui::BLACK_0);
     m_licenseKeyEditor.setColour(juce::TextEditor::textColourId, aic::ui::BLACK_100);
     m_licenseKeyEditor.setColour(juce::TextEditor::highlightedTextColourId, aic::ui::BLACK_100);
@@ -279,9 +282,9 @@ void LicenseDialog::resized()
 
     auto firstLine = area.removeFromTop(34);
     // Alert Triangle
-    m_alertTriangle->setTransformToFit(firstLine.removeFromLeft(24).reduced(0.f, 4.f).toFloat(),
+    m_alertTriangle->setTransformToFit(firstLine.removeFromLeft(24).reduced(0, 4).toFloat(),
                                        juce::RectanglePlacement::centred);
-    firstLine.removeFromLeft(8.f);
+    firstLine.removeFromLeft(8);
     // Title
     m_titleLabel.setBounds(firstLine);
     area.removeFromTop(8); // spacing

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(AicSdkPlugin VERSION 0.8.0 LANGUAGES C CXX)
+project(AicSdkPlugin VERSION 0.15.0 LANGUAGES C CXX)
 
 # Export compile commands for vscode, vim, zed etc.
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
@@ -29,7 +29,7 @@ set(AIC_SDK_ALLOW_DOWNLOAD ON CACHE BOOL "Allow download ai-coustics C SDK")
 FetchContent_Declare(
     aic_sdk
     GIT_REPOSITORY https://github.com/ai-coustics/aic-sdk-cpp.git
-    GIT_TAG        0.10.0
+    GIT_TAG        0.15.0
     GIT_SHALLOW    TRUE
 )
 FetchContent_MakeAvailable(aic_sdk)
@@ -63,7 +63,9 @@ juce_add_plugin(${PROJECT_NAME}
 juce_add_binary_data(aic-data SOURCES
     assets/aic_font.otf
     assets/aic_logo.svg
-    assets/alert.svg)
+    assets/alert.svg
+    assets/sparrow-s-48khz.aicmodel
+    assets/sparrow-l-48khz.aicmodel)
 
 target_sources(${PROJECT_NAME} PRIVATE src/PluginEditor.cpp
                                        src/PluginProcessor.cpp
@@ -79,3 +81,7 @@ target_link_libraries(
   PRIVATE juce::juce_audio_utils aic-sdk aic-data
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)
+
+if(WIN32)
+  target_link_libraries(${PROJECT_NAME} PRIVATE crypt32)
+endif()
