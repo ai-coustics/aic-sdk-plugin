@@ -83,7 +83,7 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
     g.fillAll(aic::ui::BLACK_0);
 
     auto bounds = getLocalBounds();
-    bounds.reduce(35.f, 33.f);
+    bounds.reduce(35, 33);
 
     // Position license button
     m_licenseButton.setBounds(bounds.removeFromTop(16).removeFromRight(120));
@@ -92,23 +92,23 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
     g.setFont(16.f);
     g.drawText("Model", bounds.removeFromTop(24), juce::Justification::centredLeft);
 
-    bounds.removeFromTop(8.f);
+    bounds.removeFromTop(8);
 
     modelSelector.setBounds(bounds.removeFromTop(40));
 
-    bounds.removeFromTop(8.f);
+    bounds.removeFromTop(8);
 
     modelInfoBox.setBounds(bounds.removeFromTop(160));
 
-    bounds.removeFromTop(24.f);
+    bounds.removeFromTop(24);
 
     g.setColour(aic::ui::BLACK_70);
     g.setFont(16.f);
     g.drawText("Enhancement Level", bounds.removeFromTop(24), juce::Justification::centredLeft);
 
-    enhancementSlider.setBounds(bounds.removeFromTop(54.f).expanded(7, 0));
+    enhancementSlider.setBounds(bounds.removeFromTop(54).expanded(7, 0));
 
-    bounds.removeFromTop(24.f);
+    bounds.removeFromTop(24);
 
     // Voice Activity Detection
     auto vadArea = bounds.removeFromTop(20);
@@ -136,7 +136,7 @@ void AicDemoAudioProcessorEditor::paint(juce::Graphics& g)
         g.fillEllipse(circleBounds.reduced(3.f));
     }
 
-    bounds.removeFromTop(24.f);
+    bounds.removeFromTop(24);
 
     // Footer
     auto footer = bounds.removeFromTop(20);
