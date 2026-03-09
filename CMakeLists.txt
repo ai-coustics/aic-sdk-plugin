@@ -81,3 +81,7 @@ target_link_libraries(
   PRIVATE juce::juce_audio_utils aic-sdk aic-data
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)
+
+if(WIN32)
+  target_link_libraries(${PROJECT_NAME} PRIVATE crypt32)
+endif()
